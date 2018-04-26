@@ -60,19 +60,19 @@ if ship:altitude>50000 ag6 on. //fairing deploy, or whatever on action group 6.
         }
 
     else if runmode = 4 { //Coast to Ap
-        lock steering to heading ( 90, 3). //Stay pointing 3 degrees above horizon
-        set TVAL to 0. //Engines off.
-        if (SHIP:ALTITUDE > 70000) and (ETA:APOAPSIS > 60) and (VERTICALSPEED > 0) {
-            if WARP = 0 {        // If we are not time warping
-                wait 1.         //Wait to make sure the ship is stable
-                SET WARP TO 3. //Be really careful about warping
-                }
-            }.
-        else if ETA:APOAPSIS < 60 {
-            SET WARP to 0.
-            set runmode to 5.
-            }
+      lock steering to heading ( 90, 3). //Stay pointing 3 degrees above horizon
+      set TVAL to 0. //Engines off.
+      if (SHIP:ALTITUDE > 70000) and (ETA:APOAPSIS > 60) and (VERTICALSPEED > 0) {
+        if WARP = 0 {        // If we are not time warping
+          wait 1.         //Wait to make sure the ship is stable
+          SET WARP TO 3. //Be really careful about warping
         }
+      }.
+      else if ETA:APOAPSIS < 20 OR ETA:APOAPSIS > 100 {
+        SET WARP to 0.
+        set runmode to 5.
+      }
+    }
 
     else if runmode = 5 { //Burn to raise Periapsis
        	if ETA:APOAPSIS < 5 or VERTICALSPEED < -1 or eta:apoapsis>100 { //If we're less 5 seconds from Ap or loosing altitude
@@ -95,9 +95,9 @@ if ship:altitude>50000 ag6 on. //fairing deploy, or whatever on action group 6.
         panels on.     //Deploy solar panels
         lights on.
         unlock steering.
-	sas on.
+	      sas on.
         print "SHIP SHOULD NOW BE IN SPACE!".
-	CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
+        CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
         set runmode to 0.
         }
 
@@ -110,4 +110,4 @@ if ship:altitude>50000 ag6 on. //fairing deploy, or whatever on action group 6.
     print "PERIAPSIS:  " + round(SHIP:PERIAPSIS) + "      " at (5,7).
     print "ETA to AP:  " + round(ETA:APOAPSIS) + "      " at (5,8).
 
-    }
+}

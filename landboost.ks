@@ -5,16 +5,17 @@ CLEARSCREEN.
 CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Open Terminal").
 set runMode to 7.
 set landWeight to 0.			//Notes final weight of booster right before landing.
-set pidship to 0.					//adjusts landing PID's to make the script more universal. see Runmode 3 scenario.
+set pidship to 0.					//adjusts landing PID's to make the script more flexible. see Runmode 3 scenario.
 set fweight to 0.
 set fullfuel to 0.
 //global declaration makes it easier to use these variables.
 
 
-	from {local x is 10.} until x=-1 step{set x to x-1.} do{
+from {local x is 10.} until x=-1 step{set x to x-1.} do{//countdown.
 	print "T - " + x.
 	wait 1.
-	if x=0 set runMode to 6.}
+	if x=0 set runMode to 6.
+}
 
 RUN land_lib.ks. 					//Includes the function library
 
@@ -50,7 +51,7 @@ LOCK dragAcc TO g + vertAcc. 					//vertical acceleration due to drag. Same as g
 LOCK sBurnDist TO SHIP:VERTICALSPEED^2 / (2 * (maxVertAcc + dragAcc/2)).
 
 SET stopLoop TO false.
-//RunModes: 0 = landed, 1 = final decent, 2 = hover/manouver, 3 = suicide burn, 4 = coast, 5 = boostback, 6 = launching, 7 = Prelaunch
+//RunModes: 0 = landed, 1 = final descent, 2 = hover/maneuver, 3 = suicide burn, 4 = coast, 5 = boostback, 6 = launching, 7 = Prelaunch
 SET updateSettings TO true.
 
 SET climbPID TO PIDLOOP(0.4, 0.3, 0.005, 0, 1). //Controls vertical speed
@@ -65,12 +66,14 @@ SET northPosPID:SETPOINT TO launchPad:LAT.
 
 WHEN runMode = 6 THEN {
 	SET thrott TO 1.
-	stage.						//stage 1 engines activation.
+	stage.															//stage 1 engines activation.
+	wait 0.1.
 	set fullfuel to stage:liquidfuel.		//Measures full tank fuel to determine percentage fuel remaining.
 	set fWeight to ship:mass.
 	SET updateSettings TO true.
 	WHEN (ship:mass/fWeight)<0.6 or stage:liquidfuel/fullfuel<0.2 or ship:apoapsis>90000 THEN {
 		SET runMode TO 5.
+		wait 1.
 		SET thrott TO 0.
 		stage.		//switching to boostback
 		SET updateSettings TO true.
@@ -97,7 +100,12 @@ WHEN runMode = 6 THEN {
 							SET updateSettings TO true.
 							SET thrott TO 0.
 							RCS OFF.
-						}					}				}			}		}	}
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 UNTIL stopLoop = true { //Main loop
@@ -127,16 +135,12 @@ UNTIL stopLoop = true { //Main loop
 			SET steeringDir TO targetDir - 180. 	//point towards landing pad
 			SET steeringPitch TO 0.
 			if VANG(HEADING(steeringDir,steeringPitch):VECTOR, SHIP:FACING:VECTOR) < 10 SET thrott TO 0.3.
-
-			//else wait 1.	//to avoid fuel waste during boostback, and also to prep for RO.
-			if targetDist() > targetDistOld AND targetDist() < 100 {	//if landing spot is close enough. Lower value does not always mean higher accuracy though.
+			if targetDist() > targetDistOld AND targetDist() < 100 {	//if landing spot is close enough. Value of 100 works for most cases.
 				wait 0.1.
 				SET thrott TO 0.
 				SET runMode TO 4.				//switch to coast phase.
 			}
 			SET targetDistOld TO targetDist().
-
-
 	}
 	if runMode = 4 { //Glide rocket to landing pad. Needs some work for 2.5m launchers though.
 
