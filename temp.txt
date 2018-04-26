@@ -1,0 +1,133 @@
+/*SET runMode TO 5.
+SET thrott TO 0.
+stage.		//switching to boostback
+SET updateSettings TO true.
+WHEN runMode = 4 THEN { //Coast phase
+  SET updateSettings TO true.
+  SET thrott TO 0.
+  when radar>10000 then{	//Warping to make coast quicker.
+    set kuniverse:timewarp:mode to "PHYSICS".
+    set kuniverse:timewarp:rate to 4.}
+  when radar<sburnDist + 10000 then{set kuniverse:timewarp:rate to 0.}	//exiting timewarp to land.
+  WHEN sBurnDist > radar - radarOffset -100 AND SHIP:VERTICALSPEED < -5 THEN {//When there is barely enough time to perform hoverslam.
+    SET runMode TO 3.		//hoverslam mode.
+    SET updateSettings TO true.
+    SET thrott to 1.		//Landing burn starts
+    WHEN SHIP:VERTICALSPEED > -1 THEN { //When it has stopped falling
+      //LOG "burn end alt: " + radar TO burn.txt.
+      SET runMode TO 2.	//Finetuning mode
+      GEAR ON.
+      SET updateSettings TO true.
+      WHEN geoDistance(SHIP:GEOPOSITION, launchPad) < 5 THEN { //When it is over the launch pad
+        SET runMode TO 1.	//Final approach mode
+        WHEN SHIP:STATUS = "LANDED" THEN {
+          SET runMode TO 0.	//End of program.
+          SET updateSettings TO true.
+          SET thrott TO 0.
+          RCS OFF.
+        }					}				}			}		}	}*/
+
+
+
+
+
+if runMode = 5 { //boostback
+  if updateSettings = true {
+    RCS ON.
+    SAS off.
+    unlock steering.	//kraken avoidance step.
+    SET thrott TO 0.
+    WAIT 1.
+    LOCK STEERING TO HEADING(steeringDir,steeringPitch).
+    SET updateSettings TO false.
+  }
+    SET steeringDir TO targetDir - 180. 	//point towards landing pad
+    SET steeringPitch TO 0.
+    if VANG(HEADING(steeringDir,steeringPitch):VECTOR, SHIP:FACING:VECTOR) < 10 SET thrott TO 0.3.
+
+    //else wait 1.	//to avoid fuel waste during boostback, and also to prep for RO.
+    if targetDist() > targetDistOld AND targetDist() < 100 {	//if landing spot is close enough. Lower value does not always mean higher accuracy though.
+      wait 0.1.
+      SET thrott TO 0.
+      SET runMode TO 4.				//switch to coast phase.
+    }
+    SET targetDistOld TO targetDist().
+
+
+}
+if runMode = 4 { //Glide rocket to landing pad. Needs some work for 2.5m launchers though.
+
+  SET shipProVec TO (SHIP:VELOCITY:SURFACE * -1):NORMALIZED.
+  if SHIP:VERTICALSPEED < -10 {
+    SET launchPadVect TO (launchPad:POSITION):NORMALIZED. 	//vector with magnitude 1 from impact to landing pad
+    SET rotateBy TO MIN(targetDist()*2, 20). 			//how many degrees to rotate the steeringVect
+    PRINT "rotateBy: " + rotateBy at(0,7).
+    SET steeringVect TO shipProVec * 40. //velocity vector lengthened
+    SET loopCount TO 0.
+    UNTIL (rotateBy - VANG(steeringVect, shipProVec)) < 2 { //until steeringVect gets close to desired angle
+      PRINT "entered loop" at(0,9).
+      if VANG(steeringVect, shipProVec) > rotateBy { 	//stop from overshooting
+        PRINT "broke loop" at(0,9).
+        BREAK.
+      }
+      if targetDist() > 1000 break.
+      SET loopCount TO loopCount + 1.
+      SET steeringVect TO steeringVect - launchPadVect. //essentially rotate steeringVect in small increments by subtracting the small vector.
+    }
+    PRINT "steeringAngle: " + VANG(steeringVect, shipProVec) at(0,8).
+    LOCK STEERING TO steeringVect:DIRECTION.
+  } else {
+    LOCK STEERING TO (shipProVec):DIRECTION.
+  }
+  set landWeight to ship:mass. 	//landing weight of booster.
+  if landWeight< 10 set pidship to 5.
+  else if landWeight > 10 set pidship to 10.
+  else if landWeight > 20 set pidship to 20.//this ensures steering PIDs are dependent on launcher, rather than a fixed value. Works for launchers in 1.25 and 2.5m class, 3.75 needs some testing.
+  if radar < sBurnDist+(landweight*200) {
+    brakes on.			//brakes engage at the last moment to avoid messing up Trajectories prediction.
+  }
+}
+if runMode = 3 {		//Suicide burn. Mainly handled by WHEN statement earlier.
+  if updateSettings = true {
+    SET eastVelPID:MINOUTPUT TO -pidship.
+    SET eastVelPID:MAXOUTPUT TO pidship.
+    SET northVelPID:MINOUTPUT TO -pidship.
+    SET northVelPID:MAXOUTPUT TO pidship.
+    SET steeringDir TO 0.
+    SET steeringPitch TO 90.
+    LOCK STEERING TO HEADING(steeringDir,steeringPitch).
+    SET updateSettings TO false.
+    brakes off.
+  }
+  SET cardVelCached TO cardVel().
+  steeringPIDs().
+}
+if runMode = 2 { //Powered flight to launch pad
+  IF targetDist() > 100 set runmode to 1.
+  if updateSettings = true {
+    SAS OFF.
+    RCS OFF.
+    SET eastVelPID:MINOUTPUT TO -pidship.
+    SET eastVelPID:MAXOUTPUT TO pidship.
+    SET northVelPID:MINOUTPUT TO -pidship.
+    SET northVelPID:MAXOUTPUT TO pidship.
+    SET updateSettings TO false.
+  }
+  SET cardVelCached TO cardVel().
+  SET climbPID:SETPOINT TO hoverPID:UPDATE(TIME:SECONDS, SHIP:ALTITUDE). //lower ship down while flying to launch pad
+  SET thrott TO climbPID:UPDATE(TIME:SECONDS, SHIP:VERTICALSPEED).
+  steeringPIDs().
+}
+if runMode = 1 { //Final landing
+  SET cardVelCached TO cardVel().
+  steeringPIDs().
+  SET climbPID:SETPOINT TO MAX(radar - radarOffset, 1.5) * -1.
+  PRINT "climbPID:SETPOINT: " + climbPID:SETPOINT at(0,8).
+  SET thrott TO climbPID:UPDATE(TIME:SECONDS, SHIP:VERTICALSPEED).
+}
+if runMode = 0 {
+  SET thrott TO 0.
+  sas on.			//to avoid booster tipping over. Thanks to u/noudje001 for spotting this.
+  SET updateSettings TO false.
+  CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
+}
