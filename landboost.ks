@@ -115,35 +115,11 @@ UNTIL stopLoop = true { //Main loop
 			LOCK STEERING TO HEADING(steeringDir,steeringPitch).
 			LOCK THROTTLE TO thrott.
 			SET updateSettings TO false.
-			if radar>1000{
-			if (ship:mass/fWeight)<0.61 or stage:liquidfuel/fullfuel<0.21 or ship:apoapsis>90000
-			SET runMode TO 5.}
 			CLEARSCREEN.
 		}
-		if radar>200 GEAR OFF.
-		set steeringPitch to max(45, 90 * (1 - radar / 48000)).
+		if ship:VERTICALSPEED>20 GEAR OFF.
+		set steeringPitch to max(45, 90 * (1 - radar / 35000)).
 	if runMode = 5 { //boostback
-		if updateSettings = true {
-			RCS ON.
-			SAS off.
-			unlock steering.	//kraken avoidance step.
-			SET thrott TO 0.
-			WAIT 1.
-			LOCK STEERING TO HEADING(steeringDir,steeringPitch).
-			SET updateSettings TO false.
-		}
-			SET steeringDir TO targetDir - 180. 	//point towards landing pad
-			SET steeringPitch TO 0.
-			if VANG(HEADING(steeringDir,steeringPitch):VECTOR, SHIP:FACING:VECTOR) < 10 SET thrott TO 0.3.
-			if targetDist() > targetDistOld AND targetDist() < 100 {	//if landing spot is close enough. Value of 100 works for most cases.
-				wait 0.1.
-				SET thrott TO 0.
-				SET runMode TO 4.				//switch to coast phase.
-			}
-			SET targetDistOld TO targetDist().
-	}
-	if runMode = 4 { //Glide rocket to landing pad. Needs some work for 2.5m launchers though.
-
 		SET shipProVec TO (SHIP:VELOCITY:SURFACE * -1):NORMALIZED.
 		if SHIP:VERTICALSPEED < -10 {
 			SET launchPadVect TO (launchPad:POSITION):NORMALIZED. 	//vector with magnitude 1 from impact to landing pad
@@ -225,9 +201,5 @@ UNTIL stopLoop = true { //Main loop
 function printData2 {
 	PRINT "runMode: " + runMode AT(0,1).
 	PRINT "radar: " + ROUND(radar, 2) AT(0,2).
-
-	PRINT "sBurnDist: " + ROUND(sBurnDist, 2) AT(0,3).
-	PRINT "Vertical speed target: " + ROUND(climbPID:SETPOINT, 2) AT(0,4).
-	PRINT "VERTICALSPEED: " + ROUND(SHIP:VERTICALSPEED, 2) AT(0,5).
 	PRINT "Impact point dist from pad: " + ROUND(targetDist(),2) at(0,6). }
 }

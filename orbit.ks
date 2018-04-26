@@ -1,19 +1,20 @@
 //orbit.ks
-// This program flies a second stage to orbit. To be used in conjunction with land.ks.
-CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Open Terminal").
+// This program flies a second stage to orbit. To be used in conjunction with landboost.ks.
+clearscreen.
 set runmode to 3. //startup well beyond gravity turn conditions.
 lights on.
 set targetApoapsis to 100000. //Target apoapsis in meters
 set targetPeriapsis to 75000. //Target periapsis in meters
 set tval to 0.
 
-if stage:number>=2{
+if stage:number>1{
 	print "Program yet to initialize" at (5,4).
 	wait 0.5.
-	clearscreen.
+//	clearscreen.
 }
 
 else {
+	CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Open Terminal").
 	until runmode=0{
 	//Set the ship to a known configuration
 
