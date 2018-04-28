@@ -74,24 +74,15 @@ WHEN runMode = 6 THEN {
 	WHEN (stage:liquidfuel/fullFuel)<0.15 AND STAGE:LIQUIDFUEL > 0 or ship:apoapsis>90000 then set thrott to 0.
 	WHEN sBurnDist > radar - radarOffset THEN {
 		SET runMode TO 3.		//hoverslam mode.
-		//SET updateSettings TO true.
-		SET thrott to 1.		//Landing burn starts
-		WHEN SHIP:VERTICALSPEED > -1 THEN { //When it has stopped falling
-			//LOG "burn end alt: " + radar TO burn.txt.
-			SET runMode TO 2.	//Finetuning mode
-			GEAR ON.
-		//	SET updateSettings TO true.
-			WHEN geoDistance(SHIP:GEOPOSITION, launchPad) < 5 THEN { //When it is over the launch pad
-				SET runMode TO 1.	//Final approach mode
-				WHEN SHIP:STATUS = "LANDED" THEN {
-					SET runMode TO 0.	//End of program.
-					SET updateSettings TO true.
-					SET thrott TO 0.
-					RCS OFF.
-					sas on.
-					CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
-				}
-			}
+		SET climbPID:SETPOINT TO hoverPID:UPDATE(TIME:SECONDS, SHIP:ALTITUDE). //lower ship down while flying to launch pad
+		SET thrott TO climbPID:UPDATE(TIME:SECONDS, SHIP:VERTICALSPEED).		//Landing burn starts
+		WHEN SHIP:STATUS = "LANDED" THEN {
+			SET runMode TO 0.	//End of program.
+			SET updateSettings TO false.
+			SET thrott TO 0.
+			RCS OFF.
+			sas on.
+			CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
 		}
 	}
 }
@@ -99,12 +90,11 @@ WHEN runMode = 6 THEN {
 UNTIL stopLoop = true { //Main loop
 
 	if(updateSettings=true){
-			set thrott to 1.
-			LOCK STEERING TO HEADING(steeringDir,steeringPitch).
-			LOCK THROTTLE TO thrott.
-			SET updateSettings TO false.
-			CLEARSCREEN.
-	if (runMode = 3) AND (sBurnDist > radar - radarOffset) {		//Suicide burn. Mainly handled by WHEN statement earlier.
+		//set thrott to 1.
+		LOCK STEERING TO HEADING(steeringDir,steeringPitch).
+		LOCK THROTTLE TO thrott.
+		SET updateSettings TO false.
+		if (runMode = 3) AND (sBurnDist > radar - radarOffset) {		//Suicide burn. Mainly handled by WHEN statement earlier.
 			set landWeight to ship:mass. 	//landing weight of booster.
 			if landWeight< 10 set pidship to 5.
 			else if landWeight > 10 set pidship to 10.
@@ -120,27 +110,26 @@ UNTIL stopLoop = true { //Main loop
 			brakes off.
 			SET cardVelCached TO cardVel().
 			steeringPIDs().
-
-		//	IF targetDist() > 100 set runmode to 1.
-			if radar < 10 {
-				SAS OFF.
-				RCS OFF.
-				SET eastVelPID:MINOUTPUT TO -pidship.
-				SET eastVelPID:MAXOUTPUT TO pidship.
-				SET northVelPID:MINOUTPUT TO -pidship.
-				SET northVelPID:MAXOUTPUT TO pidship.
-				SET updateSettings TO false.
+			if radar < 1000 {
+					SAS OFF.
+					RCS OFF.
+					SET eastVelPID:MINOUTPUT TO -pidship.
+					SET eastVelPID:MAXOUTPUT TO pidship.
+					SET northVelPID:MINOUTPUT TO -pidship.
+					SET northVelPID:MAXOUTPUT TO pidship.
+				//	SET updateSettings TO false.
+					SET cardVelCached TO cardVel().
+				//SET climbPID:SETPOINT TO hoverPID:UPDATE(TIME:SECONDS, SHIP:ALTITUDE). //lower ship down while flying to launch pad
+				SET thrott TO climbPID:UPDATE(TIME:SECONDS, SHIP:VERTICALSPEED).
+				steeringPIDs().
+				if radar<20 {
+					SET thrott TO 0.
+					sas on.			//to avoid booster tipping over. Thanks to u/noudje001 for spotting this.
+					CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
+			//		SET updateSettings TO false.
+				}
 			}
-			SET cardVelCached TO cardVel().
-			SET climbPID:SETPOINT TO hoverPID:UPDATE(TIME:SECONDS, SHIP:ALTITUDE). //lower ship down while flying to launch pad
-			SET thrott TO climbPID:UPDATE(TIME:SECONDS, SHIP:VERTICALSPEED).
-			steeringPIDs().
-		if radar=0 {
-			SET thrott TO 0.
-			sas on.			//to avoid booster tipping over. Thanks to u/noudje001 for spotting this.
-			SET updateSettings TO false.
 		}
-	}
 	printData2().
 	WAIT 0.01.
 	}
@@ -148,5 +137,4 @@ UNTIL stopLoop = true { //Main loop
 function printData2 {
 	PRINT "runMode: " + runMode AT(0,1).
 	PRINT "radar: " + ROUND(radar, 2) AT(0,2).
-	//PRINT "Impact point dist from pad: " + ROUND(targetDist(),2) at(0,6). }
 }
