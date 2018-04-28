@@ -1,20 +1,17 @@
-//changelog:
-// added: time based reset, set to 10 seconds
-// added: reset counter that ends loop if it resets 3 times
-// changed: return now in universal time works better with the algorithm
-// changed: output loop to work with new return of the function
-clearscreen.
-LOCAL timePast IS TIME:SECONDS.
-LOCAL impactTime IS timePast.
-UNTIL FALSE {
-  LOCAL impact IS impact_eta(impactTime).
-  LOCAL timeNow IS TIME:SECONDS.
-  IF impact > timeNow { SET impactTime TO impact. }
-  CLEARSCREEN.
-  PRINT "impact ETA: " + ROUND(impact - timeNow,1).
-  PRINT "delta Time: " + ROUND(ABS(timePast - timeNow),2).
-  SET timePast TO timeNow.
-  WAIT 0.
+function imp_time(){
+  clearscreen.
+  LOCAL timePast IS TIME:SECONDS.
+  LOCAL impactTime IS timePast.
+  UNTIL FALSE {
+    LOCAL impact IS impact_eta(impactTime).
+    LOCAL timeNow IS TIME:SECONDS.
+    IF impact > timeNow { SET impactTime TO impact. }
+    CLEARSCREEN.
+    PRINT "impact ETA: " + ROUND(impact - timeNow,1).
+    PRINT "delta Time: " + ROUND(ABS(timePast - timeNow),2).
+    SET timePast TO timeNow.
+    WAIT 0.
+  }
 }
 
 FUNCTION impact_eta { //returns the impact time in UT form after the next node, note only works on airless bodies

@@ -58,3 +58,19 @@ function steeringPIDs { //Sets global variables steeringDir and steeringPitch
 		SET steeringDir TO 360 + steeringDirNonNorm.
 	}
 }
+function vesselheight{
+	list parts in partList.
+	lock r3 to facing:forevector.
+	set highestPart to 0.
+	set lowestPart to 0.
+	for part in partList{
+	    set v to part:position.
+	    set currentPart to r3:x*v:x + r3:y*v:y + r3:z*v:z.
+	    if currentPart > highestPart
+	        set highestPart to currentPart.
+	    else if currentPart < lowestPart
+	        set lowestPart to currentPart.
+	}
+	set height to highestPart - lowestPart.
+	return height.
+}

@@ -18,6 +18,7 @@ from {local x is 10.} until x=-1 step{set x to x-1.} do{//countdown.
 }
 
 RUN land_lib.ks. 					//Includes the function library
+RUN impacttime.ks.				//Includes the impact time library (TEMP)
 
 SET steeringDir TO 90. 		//0-360, 0=north, 90=east
 SET steeringPitch TO 90. 	// 90 is up
@@ -30,8 +31,7 @@ SAS OFF.
 RCS OFF.
 
 LOCK radar TO alt:radar.
-SET radarOffset TO 8.	//ship:altitude - radar.
-
+SET radarOffset TO vesselheight().	//ship:altitude - radar.
 
 //Launchpad selection. Edit based on your need.
 SET launchPad TO SHIP:GEOPOSITION. 					//for landing on launchpad
@@ -137,4 +137,5 @@ UNTIL stopLoop = true { //Main loop
 function printData2 {
 	PRINT "runMode: " + runMode AT(0,1).
 	PRINT "radar: " + ROUND(radar, 2) AT(0,2).
+	imp_time().
 }
