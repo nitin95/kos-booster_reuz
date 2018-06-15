@@ -3,7 +3,6 @@
 //Meant for expendable/chute recovered vehicles.
 
 //Set the ship to a known configuration
-CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Open Terminal").
 SAS off.
 RCS on.
 lights on.
@@ -40,14 +39,13 @@ if ship:altitude>50000 ag6 on. //fairing deploy, or whatever on action group 6.
         set runmode to 2.     //Go to the next runmode
         }
 
-    else if runmode = 2 { // Fly UP to 10,000m
+    else if runmode = 2 { // Fly UP.
         lock steering to heading (90,90). //Straight up.
         set TVAL to 1.
-        if VERTICALSPEED > 80 {
-            //Once altitude is higher than 10km, go to Gravity Turn mode
+        if ship:VERTICALSPEED > 80 {
             set runmode to 3.
             }
-        } //Make sure you always close out your if statements.
+        }
 
     else if runmode = 3 { //Gravity turn
         set targetPitch to max( 5, 90 * (1 - ALT:RADAR / 50000)).
@@ -62,13 +60,14 @@ if ship:altitude>50000 ag6 on. //fairing deploy, or whatever on action group 6.
     else if runmode = 4 { //Coast to Ap
       lock steering to heading ( 90, 3). //Stay pointing 3 degrees above horizon
       set TVAL to 0. //Engines off.
+      if ship:altitude>50000 ag6 on. //fairing sep.
       if (SHIP:ALTITUDE > 70000) and (ETA:APOAPSIS > 60) and (VERTICALSPEED > 0) {
         if WARP = 0 {        // If we are not time warping
           wait 1.         //Wait to make sure the ship is stable
           SET WARP TO 3. //Be really careful about warping
         }
       }.
-      else if ETA:APOAPSIS < 20 OR ETA:APOAPSIS > 100 {
+      else if ETA:APOAPSIS < 20{
         SET WARP to 0.
         set runmode to 5.
       }
@@ -102,12 +101,4 @@ if ship:altitude>50000 ag6 on. //fairing deploy, or whatever on action group 6.
         }
 
     lock throttle to TVAL. //Write our planned throttle to the physical throttle
-
-    //Print data to screen.
-    print "RUNMODE:    " + runmode + "      " at (5,4).
-    print "ALTITUDE:   " + round(SHIP:ALTITUDE) + "      " at (5,5).
-    print "APOAPSIS:   " + round(SHIP:APOAPSIS) + "      " at (5,6).
-    print "PERIAPSIS:  " + round(SHIP:PERIAPSIS) + "      " at (5,7).
-    print "ETA to AP:  " + round(ETA:APOAPSIS) + "      " at (5,8).
-
 }
