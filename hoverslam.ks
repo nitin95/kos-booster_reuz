@@ -9,41 +9,44 @@ lock idealThrottle to stopDist / trueRadar.			// Throttle required for perfect h
 lock impactTime to trueRadar / abs(ship:verticalspeed).		// Time until impact, used for landing gear
 lock steeringPitch to max(80, 90 * (1 - alt:radar / 50000)).
 
-if(count = 0){
-	set radarOffset to alt:radar.
-	wait 2.
-	stage.
-	set fullfuel to stage:liquidfuel.
-	lock throttle to 1.
-	lock steering to heading(90, steeringPitch).
-	wait until stage:liquidfuel/fullfuel < 0.1 OR ship:apoapsis > 89000.
-		lock throttle to 0.
-		sas off.
+	if(count = 0){
+		set radarOffset to alt:radar*0.6.
+		wait 2.
 		stage.
-		rcs on.
-		set horizon to abs(ship:groundspeed).
-		set count to 1.
-}
+		print count.
+		set fullfuel to stage:liquidfuel.
+		lock throttle to 1.
+		lock steering to heading(90, steeringPitch).
+		wait until stage:liquidfuel/fullfuel < 0.1 OR ship:apoapsis > 89000.
+			lock throttle to 0.
+			sas off.
+			stage.
+			wait 1.
+			rcs on.
+			set horizon to abs(ship:groundspeed).
+			part2().
+	}
 
-else if (count=1){
-	WAIT UNTIL ship:verticalspeed < -1.
-		print "Boostback".
-		lock steering to heading(270,0).
-		wait 5.
-		lock throttle to 0.33.
-		wait until ship:groundspeed > horizon.//20.
-		lock throttle to 0.
-		print "Preparing for hoverslam...".
-		brakes on.
-		lock steering to srfretrograde.
-		when impactTime < 5 then {gear on.}
+function part2 {
+		WAIT UNTIL ship:verticalspeed < -1.
+			print "Boostback".
+			lock steering to heading(270,0).
+			wait 5.
+			lock throttle to 0.33.
+			wait until ship:groundspeed > horizon.//20.
+			lock throttle to 0.
+			print "Preparing for hoverslam...".
+			brakes on.
+			lock steering to srfretrograde.
+			when impactTime < 5 then {gear on.}
 
-	WAIT UNTIL trueRadar < (stopDist).
-		print "Performing hoverslam".
-		lock throttle to idealThrottle.
+		WAIT UNTIL trueRadar < (stopDist).
+			print "Performing hoverslam".
+			lock throttle to idealThrottle.
 
-	WAIT UNTIL ship:verticalspeed > -0.01.
-		print "Hoverslam completed".
-		set ship:control:pilotmainthrottle to 0.
-		rcs off.
-}
+		WAIT UNTIL ship:verticalspeed > -0.01.
+			print "Hoverslam completed".
+			set ship:control:pilotmainthrottle to 0.
+			rcs off.
+			CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
+	}
