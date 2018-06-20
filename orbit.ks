@@ -1,8 +1,7 @@
-//launcher1.ks: By @NitinM95, based off Seth Persigehl's script.
-//This program launches a ship from the KSC and flies it into orbit.
-//Meant for expendable/chute recovered vehicles.
+//Orbit.ks: By @NitinM95, based off Seth Persigehl's script.
+//Version 1.1, for Autopilot 2.1. Build 200618
+//This program takes over mid-air and flies the rocket into orbit.
 
-//Set the ship to a known configuration
 SAS off.
 RCS on.
 lights on.
@@ -16,7 +15,7 @@ clearscreen.
 
 set targetApoapsis to 90000. //Target apoapsis in meters
 set targetPeriapsis to 80000. //Target periapsis in meters. Leave a 5-10km gap to account for guidance error, you can circularize later.
-if stage:number < start{
+if stage:number < start {
   until runmode = 0 { //Run until we end the program
 
     if stage:liquidfuel<1 and stage:solidfuel<1 and stage:monopropellant<1 AND runmode>1 {//staging function
