@@ -1,4 +1,4 @@
-//Autopilot 2.1 build 200618
+//Autopilot 2.0.1 build 200618
 //Boostback and landing script for reusable boosters. Can be used for theoretically infinite boosters.
 //Updates: Functional boostback now implemented, orbit script not stable.
 clearscreen.

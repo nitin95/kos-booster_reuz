@@ -56,7 +56,7 @@ if stage:number < start {
 		else set targetPitch to 5.
 		lock steering to heading ( 90, targetPitch).
 		}
-        if (SHIP:PERIAPSIS > targetPeriapsis) or (SHIP:apoapsis > targetApoapsis*2){
+        if (SHIP:PERIAPSIS > targetPeriapsis*0.9) or (SHIP:apoapsis > targetApoapsis*2){
             //If the periapsis is high enough or apoapsis is too far
             set TVAL to 0.
             set runmode to 10.

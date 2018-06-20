@@ -11,7 +11,7 @@ gear off.
 set tval to 0.
 clearscreen.
 
-set targetApoapsis to 80000. //Target apoapsis in meters
+set targetApoapsis to 80000. //Target apoapsis in meters. Set 2863000 for KSO.
 set targetPeriapsis to 70000. //Target periapsis in meters
 
 set runmode to 2. //Safety in case we start mid-flight
