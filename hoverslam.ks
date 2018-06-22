@@ -1,6 +1,6 @@
-//Autopilot 2.0.1 build 200618
+//Autopilot 2.0.2 build 220618
 //Boostback and landing script for reusable boosters. Can be used for theoretically infinite boosters.
-//Updates: Functional boostback now implemented, orbit script not stable.
+//Updates: Ocean landing use case added.
 clearscreen.
 SET radarOffset to 0. 				// The value of alt:radar when landed (on gear)
 set count to 0.
@@ -12,7 +12,8 @@ lock idealThrottle to stopDist / trueRadar.			// Throttle required for perfect h
 lock impactTime to trueRadar / abs(ship:verticalspeed).		// Time until impact, used for landing gear
 lock steeringPitch to max(80, 90 * (1 - alt:radar / 20000)).
 //CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Open Terminal").	//for debug purposes.
-	if(count = 0){
+if alt:radar>10 part2().
+else{
 		set radarOffset to alt:radar.
 		wait 2.
 		stage.
@@ -41,8 +42,14 @@ function part2 {
 			print "Boostback".
 			lock steering to heading(270,0).
 			wait 5.
-			lock throttle to 0.33.
-			wait until ship:groundspeed > horizon*1.1.//20.
+			IF horizon<300 {
+				lock throttle to 0.33.
+				wait until ship:groundspeed > horizon*(1+(50/impactTime)).
+			}
+			else {
+				lock steering to srfretrograde.
+				brakes on.
+			}
 			lock throttle to 0.
 			print "Preparing for hoverslam...".
 			lock steering to srfretrograde.
@@ -56,6 +63,7 @@ function part2 {
 		WAIT UNTIL ship:verticalspeed > -0.1.
 			print "Hoverslam completed".
 			set ship:control:pilotmainthrottle to 0.
-			rcs off.
+			rcs on.
+			sas on.
 			CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
 	}
