@@ -17,9 +17,9 @@ clearscreen.
 set targetApoapsis to 90000. //Target apoapsis in meters
 set targetPeriapsis to 80000. //Target periapsis in meters. Leave a 5-10km gap to account for guidance error, you can circularize later.
 print "Standby".
-if stage:number < 4 {
+if stage:number <= 1 {
   until runmode = 0 { //Run until we end the program
-
+    clearscreen.
     if stage:liquidfuel<1 and stage:solidfuel<1 and stage:monopropellant<1 AND runmode>1 {//staging function
     		wait 0.1.
     		stage.
