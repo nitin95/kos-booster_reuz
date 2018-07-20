@@ -9,25 +9,20 @@ lock throttle to 0.
 gear off.
 set tval to 0.
 wait 2.
-set runmode to 3.
-if ship:apoapsis>70000 set runmode to 4.
+set runmode to 11.
 lock targetPitch to max( 5, 90 * (1 - ALT:RADAR / 50000)).//Pitch over gradually until levelling out to 5 degrees at 50km
 clearscreen.
 
 set targetApoapsis to 90000. //Target apoapsis in meters
 set targetPeriapsis to 80000. //Target periapsis in meters. Leave a 5-10km gap to account for guidance error, you can circularize later.
 print "Standby".
-if stage:number <= 1 {
-  until runmode = 0 { //Run until we end the program
+WHEN stage:number < 2 then SET runmode to 3.
+if ship:apoapsis>70000 set runmode to 4.
     clearscreen.
-    if stage:liquidfuel<1 and stage:solidfuel<1 and stage:monopropellant<1 AND runmode>1 {//staging function
-    		wait 0.1.
-    		stage.
-    		}
-    if ship:altitude>50000 ag6 on. //fairing deploy, or whatever's on action group 6.
-
+    PRINT "Run.".
+IF runmode > 0 AND runmode < 11{
     if runmode = 3 {
-      lock steering to ship:srfprograde. //Heading 90' (East), then target pitch
+      lock steering to heading(90,0). //Heading 90' (East), then target pitch
         set TVAL to 1.
         if SHIP:APOAPSIS > targetApoapsis {
             set runmode to 4.
@@ -76,7 +71,12 @@ if stage:number <= 1 {
         set runmode to 0.
         }
 
+        if stage:liquidfuel<1 and stage:solidfuel<1 and stage:monopropellant<1 AND runmode>1 {//staging function
+        		wait 0.1.
+        		stage.
+        		}
+        if ship:altitude>50000 ag6 on. //fairing deploy, or whatever's on action group 6.
+
     lock throttle to TVAL. //Write our planned throttle to the physical throttle
     print "Running".
-  }
 }

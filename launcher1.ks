@@ -22,6 +22,7 @@ if ALT:RADAR < 50 { //Guess if we are waiting for take off
 from {local x is 10.} until x=-1 step{set x to x-1.} do{
 	print "T - " + x.
 	wait 1.
+  clearscreen.
 	if x=0 set runMode to 1.}
 
 until runmode = 0 { //Run until we end the program

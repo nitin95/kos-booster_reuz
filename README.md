@@ -1,12 +1,12 @@
 # kos-booster_reuz
-Autopilot 2.0.3
+Autopilot 2.0.5
 
-Set of autopilots cobbled together to fully automate launch and recovery of orbital rocket boosters and SSTOs. Right now, only booster landings are supported.
+Set of autopilots cobbled together aiming to fully automate launch and recovery of orbital rocket boosters and SSTOs. Right now, only booster landings are supported.
 
-Functions are derived from mrbradleyjh's landing script, and I'm porting it to make it universal and for multiple booster landings.
+Hoverslam functions are derived from mrbradleyjh's script, boostback algorithms are from Nessus's script, orbital autopilot is a trimmed down version of Seth Persigehl's launch autopilot and the rest is me.
 
-As of 2nd July, 2018, I've started integrating Nessus's script logic to improve accuracy upto the point where ASDS landings are possible.
+As of 20th July, 2018, progress is solid on the project. I integrated the old boostback workflow from Caleb9000's code, but it's having trouble working with the distance functions. Will be debugged in the coming days.
 
-Autopilot 2.1 will most likely be out this month; It'll be out, come what may.
+Autopilot 2.1 will be out in July, come what may.
 
 Cheers!
