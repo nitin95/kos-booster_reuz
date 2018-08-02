@@ -11,8 +11,8 @@ gear off.
 set tval to 0.
 clearscreen.
 
-set targetApoapsis to 80000. //Target apoapsis in meters. Set 2863000 for KSO.
-set targetPeriapsis to 70000. //Target periapsis in meters
+set targetApoapsis to 80000. //Target apoapsis in meters. Set 2850000 for KTO, 80000 for LKO and 60000000 for RTO.
+set targetPeriapsis to 70000. //Target periapsis in meters. Set according to your discretion.
 
 set runmode to 2. //Safety in case we start mid-flight
 if ALT:RADAR < 50 { //Guess if we are waiting for take off
@@ -31,7 +31,7 @@ if stage:liquidfuel<1 and stage:solidfuel<1 and stage:monopropellant<1 AND runmo
 		wait 0.1.
 		stage.
 		}
-if ship:altitude>50000 ag6 on. //fairing deploy, or whatever on action group 6.
+if ALT:RADAR>70000 ag6 on. //fairing deploy, or whatever on action group 6.
 
  if runmode = 1 { //Ship is on the launchpad
         lock steering to UP.  //Point the rocket straight up
@@ -49,7 +49,7 @@ if ship:altitude>50000 ag6 on. //fairing deploy, or whatever on action group 6.
         }
 
     else if runmode = 3 { //Gravity turn
-        set targetPitch to max( 5, 90 * (1 - ALT:RADAR / 50000)).
+        set targetPitch to max( 5, 90 * (1 - ALT:RADAR / 30000)).
             //Pitch over gradually until levelling out to 5 degrees at 50km
         lock steering to heading ( 90, targetPitch). //Heading 90' (East), then target pitch
         set TVAL to 1.
@@ -70,20 +70,21 @@ if ship:altitude>50000 ag6 on. //fairing deploy, or whatever on action group 6.
       }.
       else if ETA:APOAPSIS < 20{
         SET WARP to 0.
-        set runmode to 5.
+        when eta:apoapsis < 10 then {set TVAL to 0.05.
+        set runmode to 5.}
       }
     }
-
     else if runmode = 5 { //Burn to raise Periapsis
+
        	if ETA:APOAPSIS < 5 or VERTICALSPEED < -1 or eta:apoapsis>100 { //If we're less 5 seconds from Ap or loosing altitude
             	set TVAL to 1.
-		if ETA:APOAPSIS < 5 set targetPitch to eta:apoapsis.
-		ELSE IF ETA:APOAPSIS >5 AND ETA:APOAPSIS < 100 SET targetPitch to -eta:apoapsis.
- 		else if eta:apoapsis>100 set targetPitch to 45.
-		else set targetPitch to 5.
+		if ETA:APOAPSIS < 5 set targetPitch to 2.
+		ELSE IF ETA:APOAPSIS >5 AND ETA:APOAPSIS < 100 SET targetPitch to -2.
+ 		else if eta:apoapsis>100 set targetPitch to 30.
+		else set targetPitch to 2.
 		lock steering to heading ( 90, targetPitch).
 		}
-        if (SHIP:PERIAPSIS > targetPeriapsis) or (SHIP:apoapsis > targetApoapsis*2){
+        if (SHIP:PERIAPSIS > targetPeriapsis) or (SHIP:apoapsis > targetApoapsis*1.1){
             //If the periapsis is high enough or apoapsis is too far
             set TVAL to 0.
             set runmode to 10.
@@ -91,6 +92,8 @@ if ship:altitude>50000 ag6 on. //fairing deploy, or whatever on action group 6.
         }
 
     else if runmode = 10 { //Final touches
+      if SHIP:apoapsis > targetApoapsis*1.1 set runmode to 4.
+      else {
         set TVAL to 0. //Shutdown engine.
         panels on.     //Deploy solar panels
         lights on.
@@ -99,7 +102,8 @@ if ship:altitude>50000 ag6 on. //fairing deploy, or whatever on action group 6.
         print "SHIP SHOULD NOW BE IN SPACE!".
         CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
         set runmode to 0.
-        }
+      }
+    }
 
     lock throttle to TVAL. //Write our planned throttle to the physical throttle
 }
