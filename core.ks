@@ -1,82 +1,80 @@
 //Orbit.ks: By @NitinM95, based off Seth Persigehl's script.
 //Version 1.1.1, for Autopilot 2.1. Build 220618
 //This program takes over mid-air and flies the rocket into orbit.
-//Bugs: does not activate on staging.
 SAS off.
 RCS on.
 lights on.
-lock throttle to 0.
 gear off.
-set tval to 0.
-wait 2.
-set runmode to 11.
-lock targetPitch to max( 5, 90 * (1 - ALT:RADAR / 50000)).//Pitch over gradually until levelling out to 5 degrees at 50km
+wait until ag10.
+wait 5.
+set runmode to 3.
+set targetPitch to 0.
 clearscreen.
 
 set targetApoapsis to 90000. //Target apoapsis in meters
 set targetPeriapsis to 80000. //Target periapsis in meters. Leave a 5-10km gap to account for guidance error, you can circularize later.
 print "Standby".
-WHEN stage:number < 2 then SET runmode to 3.
-if ship:apoapsis>70000 set runmode to 4.
-    clearscreen.
-    PRINT "Run.".
-IF runmode > 0 AND runmode < 11{
+until runmode=0{
+
     if runmode = 3 {
-      lock steering to heading(90,0). //Heading 90' (East), then target pitch
-        set TVAL to 1.
+      wait 0.1.
+      print "Start".
+      set ship:name to "stage2".
+      //set target to "flyback".
+      lock steering to heading(90,targetPitch). //Heading 90' (East), then target pitch
+      lock throttle to 1.
         if SHIP:APOAPSIS > targetApoapsis {
-            set runmode to 4.
+            set targetPitch to -20.
+            wait 5.
+            if SHIP:APOAPSIS > targetApoapsis set runmode to 4.
             }
-        }
+        else if eta:apoapsis>100 set targetPitch to 10.
+        else set targetPitch to 0.
+}
 
     else if runmode = 4 { //Coast to Ap
+      PRINT "Coast".
       lock steering to heading ( 90, 3). //Stay pointing 3 degrees above horizon
-      set TVAL to 0. //Engines off.
-      if (SHIP:ALTITUDE > 70000) and (ETA:APOAPSIS > 60) and (VERTICALSPEED > 0) {
-        if WARP = 0 {        // If we are not time warping
-          wait 1.         //Wait to make sure the ship is stable
-          SET WARP TO 3. //Be really careful about warping
-        }
-      }.
-      else if ETA:APOAPSIS < 30{
+      lock throttle to 0. //Engines off.
+      when ETA:APOAPSIS < 30 then{
         SET WARP to 0.
         set runmode to 5.
       }
     }
 
     else if runmode = 5 { //Burn to raise Periapsis
+      print "Circularization".
        	if ETA:APOAPSIS < 5 or VERTICALSPEED < -1 or eta:apoapsis>100 { //If we're less 5 seconds from Ap or loosing altitude
-            	set TVAL to 1.
+            	lock throttle to 1.
 		if ETA:APOAPSIS < 5 set targetPitch to eta:apoapsis.
 		ELSE IF ETA:APOAPSIS >5 AND ETA:APOAPSIS < 100 SET targetPitch to eta:apoapsis.
- 		else if eta:apoapsis>100 set targetPitch to 45.
+ 		else if eta:apoapsis>100 set targetPitch to 30.
 		else set targetPitch to 5.
 		lock steering to heading ( 90, targetPitch).
 		}
-        if (SHIP:PERIAPSIS > targetPeriapsis*0.9) or (SHIP:apoapsis > targetApoapsis*2){
+        if ship:periapsis > 0 lock throttle to 0.2.
+        if (SHIP:PERIAPSIS > targetPeriapsis*0.9) or (SHIP:apoapsis > targetApoapsis*1.2){
             //If the periapsis is high enough or apoapsis is too far
-            set TVAL to 0.
+            lock throttle to 0.
             set runmode to 10.
             }
         }
 
     else if runmode = 10 { //Final touches
-        set TVAL to 0. //Shutdown engine.
+        lock throttle to 0. //Shutdown engine.
         panels on.     //Deploy solar panels
         lights on.
         unlock steering.
 	      sas on.
         print "SHIP SHOULD NOW BE IN SPACE!".
-        CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
         set runmode to 0.
+        CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
         }
 
         if stage:liquidfuel<1 and stage:solidfuel<1 and stage:monopropellant<1 AND runmode>1 {//staging function
         		wait 0.1.
         		stage.
         		}
-        if ship:altitude>50000 ag6 on. //fairing deploy, or whatever's on action group 6.
-
-    lock throttle to TVAL. //Write our planned throttle to the physical throttle
-    print "Running".
+    if ship:altitude>55000 ag6 on. //fairing deploy, or whatever's on action group 6.
+    wait 0.001.
 }
