@@ -1,6 +1,7 @@
 //Autopilot 2.2 build 200219
-//Boostback and landing script for Falcon Heavy-style core booster to head to orbit.
-//Updates: Ease-of-use and algorithm updates.
+//Upper stage autopilot for partiallyu reusable vehicles. Parks into a ~90x70 km Kerbin orbit.
+//Updates: Bugfixes and improvements.
+
 SAS off.
 RCS on.
 lights on.
@@ -9,6 +10,7 @@ wait until ag10.
 wait 5.
 set runmode to 3.
 set targetPitch to 0.
+SET g to 9.81.
 clearscreen.
 
 set targetApoapsis to 90000. //Target apoapsis in meters
@@ -23,16 +25,15 @@ until runmode=0{
       //set target to "flyback".
       lock throttle to 1.
       pitchBal().
-        if SHIP:APOAPSIS > targetApoapsis set runmode to 4.
-        //else if eta:apoapsis>100 set targetPitch to 10.
-        //else set targetPitch to 0.
+      if SHIP:APOAPSIS > targetApoapsis set runmode to 4.
 }
 
     else if runmode = 4 { //Coast to Ap
       PRINT "Coast".
+      if ship:altitude>55000 ag6 on. //fairing deploy, or whatever's on action group 6.
       lock steering to heading ( 90, 3). //Stay pointing 3 degrees above horizon
       lock throttle to 0. //Engines off.
-      when ETA:APOAPSIS < 30 then{
+      when ETA:APOAPSIS < 20 then{
         SET WARP to 0.
         set runmode to 5.
       }
@@ -48,7 +49,7 @@ until runmode=0{
 		else set targetPitch to 5.
 		lock steering to heading ( 90, targetPitch).
 		}
-        if ship:periapsis > 0 lock throttle to 0.2.
+        if ship:periapsis > 0 lock throttle to (ship:mass*g / ship:availablethrust)*0.3.
         if (SHIP:PERIAPSIS > targetPeriapsis*0.9) or (SHIP:apoapsis > targetApoapsis*1.2){
             //If the periapsis is high enough or apoapsis is too far
             lock throttle to 0.
@@ -63,9 +64,8 @@ until runmode=0{
         unlock steering.
 	      sas on.
         print "SHIP SHOULD NOW BE IN SPACE!".
-        set runmode to 0.
         ag9.  //payload decoupler
-        CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
+        run EDLK.
         }
 
         if stage:liquidfuel<1 and stage:solidfuel<1 and stage:monopropellant<1 AND runmode>1 {//staging function
@@ -74,10 +74,11 @@ until runmode=0{
         		}
     if ship:altitude>55000 ag6 on. //fairing deploy, or whatever's on action group 6.
     wait 0.001.
+    clearscreen.
 }
 
 function pitchBal {
-		if ETA:APOAPSIS < 5 set targetPitch to max(5, 90*(1-alt:radar/55000)).
+		if ETA:APOAPSIS < 5 set targetPitch to max(5, 90*(1-alt:radar/40000)).
 		ELSE IF ETA:APOAPSIS >5 AND ETA:APOAPSIS < 100 SET targetPitch to max(5, 90*(1-alt:radar/40000)).
 		else if ship:verticalspeed<-1 set targetPitch to 30.
 		else set targetPitch to 2.

@@ -1,16 +1,18 @@
 //Autopilot 2.2 build 200219
-//Boostback and landing script for reusable boosters to land at launchpad. Can be used for theoretically infinite boosters.
-//Updates: Ease-of-use and algorithm updates.
+//Boostback and landing script for reusable strapon boosters. Can be used for theoretically infinite boosters.
 
 clearscreen.
 
 wait until ag5.
 loaddist(500000).
 
+global oldD is 0.
+global oldT is time:seconds.
+
 set horizon to 0.
 set fullfuel to 1.
 set tval to 0.
-SET radarOffset to alt:radar*0.5. 				// The value of alt:radar when landed (on gear)
+SET radarOffset to alt:radar*0.3. 				// The value of alt:radar when landed (on gear)
 lock trueRadar to alt:radar-radarOffset.		// Offset radar to get distance from gear to ground
 set g to 9.807.		// Gravity (m/s^2)
 lock maxDecel to (ship:availablethrust / ship:mass) - g.	// Maximum deceleration possible (m/s^2)
@@ -18,11 +20,11 @@ lock stopDist to ship:verticalspeed^2 / (2 * maxDecel)+50.		// The distance the 
 lock idealThrottle to stopDist / trueRadar.			// Throttle required for perfect hoverslam
 lock impactTime to trueRadar / abs(ship:verticalspeed).		// Time until impact, used for landing gear
 lock impactDist to impactTime*abs(ship:groundspeed).
-lock impactVert to alt:radar-2000.
 lock steeringPitch to max(75, 90 * (1 - alt:radar / 25000)).
 lock SPos to ship:geoposition.
 set impact to ship:geoposition.
 set landing to ship:geoposition.
+lock impact to impactPoint().
 LOCK targetDir TO geoDir(impact, landing).
 lock targetDist to distance(impact,landing).
 lock throttle to tval.
@@ -59,6 +61,7 @@ else{
 }
 
 function part2 {
+//	set kuniverse:activevessel to vessel("flyback"). //doesn't work in atmo.
 	set kuniverse:timewarp:mode to "PHYSICS".
 	set kuniverse:timewarp:rate to 4.
 	wait until eta:apoapsis<10.
@@ -73,7 +76,7 @@ function part2 {
 		 	wait until ship:groundspeed > horizon*(1+(70/impactTime)).//
 			set tval to 0.
 	print "Preparing for hoverslam...".
-	lock steering to landing:altitudeposition(2000)*-1.
+	lock steering to landing:altitudeposition(100)*-1.
 	//coast commands
 	when impactTime > 15 then{	//Warping to make coast quicker.
 		set kuniverse:timewarp:mode to "PHYSICS".
@@ -81,7 +84,7 @@ function part2 {
 		brakes on.
 	}
 	when impactTime < 10 then{set kuniverse:timewarp:rate to 0.}	//exiting timewarp to land.
-	when impactTime < 8 then brakes on. //Not necessary with grid fins
+//	when impactTime < 8 then brakes on. //Not necessary with grid fins
 	when impactTime < 2 then gear on.
 
 	WAIT UNTIL trueRadar < stopDist.
@@ -89,11 +92,11 @@ function part2 {
 		LOCK tval to idealThrottle.
 		lock steering to srfretrograde.
 
-	WAIT UNTIL ship:verticalspeed > -10.
-	lock throttle to (0.95 * ((9.81 * SHIP:MASS) / SHIP:availablethrust)).
-	lock steering to up.
-	wait until ship:status = "landed".
-		print "Hoverslam completed".
+		WAIT UNTIL ship:verticalspeed > -10.
+		lock throttle to (0.95 * ((9.81 * SHIP:MASS) / SHIP:availablethrust)).
+		lock steering to up.
+		wait until ship:status = "landed".
+			print "Hoverslam completed".
 		LOCK throttle to 0.
 		rcs on.
 		sas on.
@@ -133,4 +136,16 @@ function loaddist {
 	SET KUNIVERSE:DEFAULTLOADDISTANCE:SUBORBITAL:PACK TO dist - 1.
 	SET KUNIVERSE:DEFAULTLOADDISTANCE:SUBORBITAL:UNPACK TO dist - 1000.
 	WAIT 0.
+}
+
+function impactPoint {
+    local tti is impactTime.
+
+    local impactUT is time + tti.
+    local impactVec is positionat(ship, impactUT).
+
+    local ll is body:geoPositionOf(impactVec).
+    local lon is ll:lng - (body:angularVel:mag * Constant:RadToDeg * tti).
+
+    return latlng(ll:lat, lon).
 }
