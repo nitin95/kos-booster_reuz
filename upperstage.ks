@@ -1,6 +1,6 @@
-//Autopilot 2.2 build 200219
+//Autopilot 2.2 build 220219
 //Upper stage autopilot for partiallyu reusable vehicles. Parks into a ~90x70 km Kerbin orbit.
-//Updates: Bugfixes and improvements.
+//Updates: Slightly higher gravity turn to account for high TWR second stages.
 
 SAS off.
 RCS on.
@@ -78,7 +78,7 @@ until runmode=0{
 }
 
 function pitchBal {
-		if ETA:APOAPSIS < 5 set targetPitch to max(5, 90*(1-alt:radar/40000)).
+		if ETA:APOAPSIS < 5 set targetPitch to max(10, 90*(1-alt:radar/55000)).
 		ELSE IF ETA:APOAPSIS >5 AND ETA:APOAPSIS < 100 SET targetPitch to max(5, 90*(1-alt:radar/40000)).
 		else if ship:verticalspeed<-1 set targetPitch to 30.
 		else set targetPitch to 2.

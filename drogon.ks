@@ -1,5 +1,5 @@
 //Autopilot 2.2 build 200219
-//Experimental autopilot to deorbit and land a capsule.
+//Experimental autopilot to fly a capsule to the Mun.
 
 clearscreen.
 set radarOffset to 2.8.	 				// The value of alt:radar when landed (on gear)
@@ -31,7 +31,7 @@ WAIT UNTIL trueRadar < stopDist.
 	print "Performing hoverslam".
 	lock throttle to idealThrottle.
 
-	WAIT UNTIL ship:verticalspeed > -10.
+	WAIT UNTIL ship:verticalspeed > -5.
 	lock throttle to (0.95 * ((9.81 * SHIP:MASS) / SHIP:availablethrust)).
 	lock steering to up.
 	wait until ship:status = "landed".

@@ -1,6 +1,6 @@
-//Autopilot 2.2 build 200219
+//Autopilot 2.2.1 build 220219
 //Boostback and landing script for reusable strapon boosters. Can be used for theoretically infinite boosters.
-
+//Updates: Code optimization and fixed steering bug.
 clearscreen.
 
 wait until ag5.
@@ -12,11 +12,11 @@ global oldT is time:seconds.
 set horizon to 0.
 set fullfuel to 1.
 set tval to 0.
-SET radarOffset to alt:radar*0.3. 				// The value of alt:radar when landed (on gear)
+SET radarOffset to alt:radar. 				// The value of alt:radar when landed (on gear)
 lock trueRadar to alt:radar-radarOffset.		// Offset radar to get distance from gear to ground
 set g to 9.807.		// Gravity (m/s^2)
 lock maxDecel to (ship:availablethrust / ship:mass) - g.	// Maximum deceleration possible (m/s^2)
-lock stopDist to ship:verticalspeed^2 / (2 * maxDecel)+50.		// The distance the burn will require
+lock stopDist to ship:verticalspeed^2 / (2 * maxDecel)+20.		// The distance the burn will require
 lock idealThrottle to stopDist / trueRadar.			// Throttle required for perfect hoverslam
 lock impactTime to trueRadar / abs(ship:verticalspeed).		// Time until impact, used for landing gear
 lock impactDist to impactTime*abs(ship:groundspeed).
@@ -25,8 +25,6 @@ lock SPos to ship:geoposition.
 set impact to ship:geoposition.
 set landing to ship:geoposition.
 lock impact to impactPoint().
-LOCK targetDir TO geoDir(impact, landing).
-lock targetDist to distance(impact,landing).
 lock throttle to tval.
 
 if alt:radar>10000 part2().
@@ -92,7 +90,7 @@ function part2 {
 		LOCK tval to idealThrottle.
 		lock steering to srfretrograde.
 
-		WAIT UNTIL ship:verticalspeed > -10.
+		WAIT UNTIL ship:verticalspeed > -5.
 		lock throttle to (0.95 * ((9.81 * SHIP:MASS) / SHIP:availablethrust)).
 		lock steering to up.
 		wait until ship:status = "landed".
@@ -103,18 +101,6 @@ function part2 {
 		set ship:name to "Booster".
 		wait 1.
 		CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
-}
-
-function geoDir {
-	parameter geo1.
-	parameter geo2.
-	return ARCTAN2(geo1:LNG - geo2:LNG, geo1:LAT - geo2:LAT).
-}
-
-function distance {
-  declare parameter pos1, pos2.
-  local dif to V(pos1:lat - pos2:lat, pos1:lng - pos2:lng, 0).
-  return dif:mag.
 }
 
 function loaddist {

@@ -1,6 +1,6 @@
-//Autopilot 2.2 build 200219
+//Autopilot 2.2.1 build 220219
 //Boostback and landing script for reusable boosters to land at launchpad. Can be used for theoretically infinite boosters.
-//Updates: Ease-of-use and algorithm updates.
+//Updates: Code optimization and fixed steering bug.
 
 clearscreen.
 
@@ -10,21 +10,18 @@ loaddist(500000).
 set horizon to 0.
 set fullfuel to 1.
 set tval to 0.
-SET radarOffset to alt:radar*0.5. 				// The value of alt:radar when landed (on gear)
+SET radarOffset to alt:radar. 				// The value of alt:radar when landed (on gear)
 lock trueRadar to alt:radar-radarOffset.		// Offset radar to get distance from gear to ground
 set g to 9.807.		// Gravity (m/s^2)
 lock maxDecel to (ship:availablethrust / ship:mass) - g.	// Maximum deceleration possible (m/s^2)
-lock stopDist to ship:verticalspeed^2 / (2 * maxDecel)+50.		// The distance the burn will require
+lock stopDist to ship:verticalspeed^2 / (2 * maxDecel)+20.		// The distance the burn will require
 lock idealThrottle to stopDist / trueRadar.			// Throttle required for perfect hoverslam
 lock impactTime to trueRadar / abs(ship:verticalspeed).		// Time until impact, used for landing gear
 lock impactDist to impactTime*abs(ship:groundspeed).
-lock impactVert to alt:radar-2000.
 lock steeringPitch to max(75, 90 * (1 - alt:radar / 25000)).
 lock SPos to ship:geoposition.
 set impact to ship:geoposition.
 set landing to ship:geoposition.
-LOCK targetDir TO geoDir(impact, landing).
-lock targetDist to distance(impact,landing).
 lock throttle to tval.
 
 if alt:radar>10000 part2().
@@ -67,13 +64,16 @@ function part2 {
 		SET steeringDir TO 270. 	//point towards landing pad
 		SET steeringPitch TO 0.
 		lock steering to heading(270,0).
+		SAS ON.
+		wait until VANG(HEADING(steeringDir,steeringPitch):VECTOR, SHIP:FACING:VECTOR) < 25.  //wait until pointing in right direction, saves fuel.
+			SAS OFF.
+			set tval TO 0.05.
 		wait until VANG(HEADING(steeringDir,steeringPitch):VECTOR, SHIP:FACING:VECTOR) < 10.  //wait until pointing in right direction, saves fuel.
 			set tval TO 0.3.
-			print targetDist.
 		 	wait until ship:groundspeed > horizon*(1+(70/impactTime)).//
 			set tval to 0.
 	print "Preparing for hoverslam...".
-	lock steering to landing:altitudeposition(2000)*-1.
+	lock steering to landing:altitudeposition(stopDist)*-1.
 	//coast commands
 	when impactTime > 15 then{	//Warping to make coast quicker.
 		set kuniverse:timewarp:mode to "PHYSICS".
@@ -89,7 +89,7 @@ function part2 {
 		LOCK tval to idealThrottle.
 		lock steering to srfretrograde.
 
-	WAIT UNTIL ship:verticalspeed > -10.
+	WAIT UNTIL ship:verticalspeed > -5.
 	lock throttle to (0.95 * ((9.81 * SHIP:MASS) / SHIP:availablethrust)).
 	lock steering to up.
 	wait until ship:status = "landed".
@@ -100,18 +100,6 @@ function part2 {
 		set ship:name to "Booster".
 		wait 1.
 		CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
-}
-
-function geoDir {
-	parameter geo1.
-	parameter geo2.
-	return ARCTAN2(geo1:LNG - geo2:LNG, geo1:LAT - geo2:LAT).
-}
-
-function distance {
-  declare parameter pos1, pos2.
-  local dif to V(pos1:lat - pos2:lat, pos1:lng - pos2:lng, 0).
-  return dif:mag.
 }
 
 function loaddist {

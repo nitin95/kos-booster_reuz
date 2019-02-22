@@ -23,7 +23,7 @@ WAIT UNTIL trueRadar < stopDist.
 	lock throttle to idealThrottle.
 	lock steering to ship:srfretrograde.
 
-WAIT UNTIL ship:verticalspeed > -10.
+WAIT UNTIL ship:verticalspeed > -5.
 	lock throttle to (1 * ((9.81 * SHIP:MASS) / SHIP:availablethrust)).
 wait until ship:status = "landed".
 	print "Hoverslam completed".

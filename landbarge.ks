@@ -1,6 +1,6 @@
-//Autopilot 2.2 build 200219
+//Autopilot 2.2.1 build 220219
 //Boostback and landing script for reusable boosters with barge landing. Can be used for theoretically infinite boosters.
-//Updates: Improved accuracy, but still can't precisely hit target. Recommended to try landing boosters on islands, this will be implemented in a future update.
+//Updates: Code optimization and fixed steering bug.
 clearscreen.
 
 wait until ag5.
@@ -9,11 +9,11 @@ loaddist(500000).
 set horizon to 0.
 set fullfuel to 0.
 set tval to 0.
-SET radarOffset to 35. 				// The value of alt:radar when landed (on gear)
+SET radarOffset to alt:radar. 				// The value of alt:radar when landed (on gear)
 lock trueRadar to alt:radar-radarOffset.		// Offset radar to get distance from gear to ground
 set g to 9.807.		// Gravity (m/s^2)
 lock maxDecel to (ship:availablethrust / ship:mass) - g.	// Maximum deceleration possible (m/s^2)
-lock stopDist to ship:verticalspeed^2 / (2 * maxDecel)+50.		// The distance the burn will require
+lock stopDist to ship:verticalspeed^2 / (2 * maxDecel).		// The distance the burn will require
 lock idealThrottle to stopDist / trueRadar.			// Throttle required for perfect hoverslam
 lock impactTime to trueRadar / abs(ship:verticalspeed).		// Time until impact, used for landing gear
 lock impactDist to impactTime*abs(ship:groundspeed).
@@ -84,7 +84,7 @@ function part2 {
 		LOCK tval to idealThrottle.
 		lock steering to srfretrograde.
 
-		WAIT UNTIL ship:verticalspeed > -10.
+		WAIT UNTIL ship:verticalspeed > -5.
 		lock throttle to (0.95 * ((9.81 * SHIP:MASS) / SHIP:availablethrust)).
 		lock steering to up.
 		wait until ship:status = "landed".
