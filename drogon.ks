@@ -14,9 +14,10 @@ sas off.
 
 
 //this section is for mun and minmus. comment out if going to Duna.
-lock steering to retrograde.
+lock steering to vxcl(up:vector,-velocity:surface).
+wait until VANG(retrograde:VECTOR, SHIP:FACING:VECTOR) < 10.
 lock throttle to 1.
-wait until ship:groundspeed < 50.
+wait until ship:groundspeed < 2.
 lock throttle to 0.
 
 WAIT UNTIL ship:verticalspeed < -1.
@@ -28,15 +29,16 @@ WAIT UNTIL ship:verticalspeed < -1.
 	when impactTime < 3 then {gear on.}
 
 WAIT UNTIL trueRadar < stopDist.
+	set kuniverse:timewarp:rate to 0.
 	print "Performing hoverslam".
 	lock throttle to idealThrottle.
 
 	WAIT UNTIL ship:verticalspeed > -5.
-	lock throttle to (0.95 * ((9.81 * SHIP:MASS) / SHIP:availablethrust)).
+	lock throttle to (0.95 * ((g * SHIP:MASS) / SHIP:availablethrust)).
 	lock steering to up.
 	wait until ship:status = "landed".
 		print "Hoverslam completed".
-	set ship:control:pilotmainthrottle to 0.
+	lock throttle to 0.
 	rcs off.
 	sas on.
 

@@ -1,6 +1,7 @@
 //Autopilot 2.2.1 build 220219
 //Boostback and landing script for reusable boosters with barge landing. Can be used for theoretically infinite boosters.
 //Updates: Code optimization and fixed steering bug.
+//Put barge 150-200km from KSC for max effect.
 clearscreen.
 
 wait until ag5.
@@ -61,11 +62,9 @@ function part2 {
 	wait until ship:verticalspeed < -1.
 	lock steering to landing:altitudeposition(5)*-1.
 	//coast commands
-	when impactTime > 15 then{	//Warping to make coast quicker.
 		set kuniverse:timewarp:mode to "PHYSICS".
 		set kuniverse:timewarp:rate to 4.
 		brakes on.
-	}
 
 	//Entry burn
 //	wait until alt:radar < 20000.

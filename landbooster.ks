@@ -22,9 +22,7 @@ lock impactTime to trueRadar / abs(ship:verticalspeed).		// Time until impact, u
 lock impactDist to impactTime*abs(ship:groundspeed).
 lock steeringPitch to max(75, 90 * (1 - alt:radar / 25000)).
 lock SPos to ship:geoposition.
-set impact to ship:geoposition.
 set landing to ship:geoposition.
-lock impact to impactPoint().
 lock throttle to tval.
 
 if alt:radar>10000 part2().
@@ -37,9 +35,8 @@ else{
 	set fullfuel to stage:liquidfuel.
 	wait 2.
 	lock steering to heading(90, steeringPitch).
-	wait until (stage:liquidfuel)/fullfuel < 0.2 OR ship:apoapsis > 89000.
+	wait until (stage:liquidfuel)/fullfuel < 0.1 OR ship:apoapsis > 89000.
 		print "MECO".
-		PRINT targetDist.
 		set tval to 0.
 		sas off.
 		wait 2.
@@ -70,7 +67,6 @@ function part2 {
 		lock steering to heading(270,0).
 		wait until VANG(HEADING(steeringDir,steeringPitch):VECTOR, SHIP:FACING:VECTOR) < 10.  //wait until pointing in right direction, saves fuel.
 			set tval TO 0.3.
-			print targetDist.
 		 	wait until ship:groundspeed > horizon*(1+(70/impactTime)).//
 			set tval to 0.
 	print "Preparing for hoverslam...".
@@ -122,16 +118,4 @@ function loaddist {
 	SET KUNIVERSE:DEFAULTLOADDISTANCE:SUBORBITAL:PACK TO dist - 1.
 	SET KUNIVERSE:DEFAULTLOADDISTANCE:SUBORBITAL:UNPACK TO dist - 1000.
 	WAIT 0.
-}
-
-function impactPoint {
-    local tti is impactTime.
-
-    local impactUT is time + tti.
-    local impactVec is positionat(ship, impactUT).
-
-    local ll is body:geoPositionOf(impactVec).
-    local lon is ll:lng - (body:angularVel:mag * Constant:RadToDeg * tti).
-
-    return latlng(ll:lat, lon).
 }

@@ -1,6 +1,6 @@
 # kos-booster_reuz
-Autopilot 2.2.1
-Release: 220219
+Autopilot 2.3
+Release: 200319
 
 Set of autopilots cobbled together aiming to fully automate launch and recovery of orbital rocket boosters and SSTOs. Right now, only booster landings are supported.
 
@@ -8,10 +8,14 @@ Hoverslam functions are derived from mrbradleyjh's script, boostback algorithms 
 
 Feel free to use the code for your own scripts. If you're posting content based on this, I'd really appreciate it if you tagged me in the post. (u/nitinm95 on Reddit).
 
-UPDATE 2.2.1:
+UPDATE 2.3:
 
--Removed bug which caused boosters to get stuck while flipping for boostback.
--Further optimized final landing code for smoother experience.
--Removed redundant code for better reading.
--Upperstage autopilot gravity turn height raised to avoid atmospheric friction in certain scenarios that deorbited the stage.
--drogonland.ks is now drogon.ks. It'll be a full mission autopilot, more on that soon.
+-Suicide burn and boostback steering optimization.
+
+-drogon.ks now performs a deorbit and landing on an airless body. It's got no targeting abilities though, just lands at the nearest possible point.
+
+-Optimized booster landing script to increase delta-V contribution.
+
+-Updated pitch balance function to work based on vertical speed, not time to apoapsis.
+
+-Updated upperstage.ks to push the stage out of atmosphere to avoid burning up. This happened a surprising number of times.

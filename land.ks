@@ -20,7 +20,6 @@ lock impactTime to trueRadar / abs(ship:verticalspeed).		// Time until impact, u
 lock impactDist to impactTime*abs(ship:groundspeed).
 lock steeringPitch to max(75, 90 * (1 - alt:radar / 25000)).
 lock SPos to ship:geoposition.
-set impact to ship:geoposition.
 set landing to ship:geoposition.
 lock throttle to tval.
 
@@ -36,7 +35,6 @@ else{
 	lock steering to heading(90, steeringPitch).
 	wait until (stage:liquidfuel)/fullfuel < 0.2 OR ship:apoapsis > 89000.
 		print "MECO".
-		PRINT targetDist.
 		set tval to 0.
 		sas off.
 		wait 2.
@@ -61,19 +59,18 @@ function part2 {
 	wait until eta:apoapsis<10.
 		SET kuniverse:timewarp:rate to 0.
 		print "Boostback".
-		SET steeringDir TO 270. 	//point towards landing pad
+		SET steeringDir TO landing:heading. 	//point towards landing pad
 		SET steeringPitch TO 0.
-		lock steering to heading(270,0).
-		SAS ON.
+		lock steering to heading(steeringDir,steeringPitch).
 		wait until VANG(HEADING(steeringDir,steeringPitch):VECTOR, SHIP:FACING:VECTOR) < 25.  //wait until pointing in right direction, saves fuel.
 			SAS OFF.
 			set tval TO 0.05.
 		wait until VANG(HEADING(steeringDir,steeringPitch):VECTOR, SHIP:FACING:VECTOR) < 10.  //wait until pointing in right direction, saves fuel.
 			set tval TO 0.3.
-		 	wait until ship:groundspeed > horizon*(1+(70/impactTime)).//
+		 	wait until ship:groundspeed > horizon*(1+(65/impactTime)).//The number varies between rockets. You might have to do some trial and error before you get the sweet spot.
 			set tval to 0.
 	print "Preparing for hoverslam...".
-	lock steering to landing:altitudeposition(stopDist)*-1.
+	lock steering to landing:altitudeposition(50)*-1.
 	//coast commands
 	when impactTime > 15 then{	//Warping to make coast quicker.
 		set kuniverse:timewarp:mode to "PHYSICS".
@@ -82,15 +79,16 @@ function part2 {
 	}
 	when impactTime < 10 then{set kuniverse:timewarp:rate to 0.}	//exiting timewarp to land.
 	when impactTime < 8 then brakes on. //Not necessary with grid fins
+	when impactTime < 5 then lock steering to srfretrograde.
 	when impactTime < 2 then gear on.
 
 	WAIT UNTIL trueRadar < stopDist.
 		print "Performing hoverslam".
 		LOCK tval to idealThrottle.
-		lock steering to srfretrograde.
 
 	WAIT UNTIL ship:verticalspeed > -5.
 	lock throttle to (0.95 * ((9.81 * SHIP:MASS) / SHIP:availablethrust)).
+	wait 1.
 	lock steering to up.
 	wait until ship:status = "landed".
 		print "Hoverslam completed".

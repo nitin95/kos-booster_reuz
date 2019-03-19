@@ -105,9 +105,8 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
 }
 
 function pitchBal {
-		if ETA:APOAPSIS < 5 set targetPitch to 2.
-		ELSE IF ETA:APOAPSIS >5 and ship:verticalspeed > 0.1 SET targetPitch to -1.
+		IF ship:verticalspeed > 1 SET targetPitch to 0.
 		else if ship:verticalspeed<-1 set targetPitch to 30.
-		else set targetPitch to 2.
+		else set targetPitch to 5.
 		lock steering to heading ( ldir, targetPitch).
 }

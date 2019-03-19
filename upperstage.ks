@@ -24,14 +24,18 @@ until runmode=0{
       set ship:name to "stage2".
       //set target to "flyback".
       lock throttle to 1.
-      pitchBal().
+      if alt:radar < 60000{
+      lock targetPitch to max( 5, 90 * (1 - ALT:RADAR / 60000)).
+      lock steering to heading (90, targetPitch).
+      }
+      else pitchBal().
       if SHIP:APOAPSIS > targetApoapsis set runmode to 4.
 }
 
     else if runmode = 4 { //Coast to Ap
       PRINT "Coast".
       if ship:altitude>55000 ag6 on. //fairing deploy, or whatever's on action group 6.
-      lock steering to heading ( 90, 3). //Stay pointing 3 degrees above horizon
+      lock steering to heading (90, 3). //Stay pointing 3 degrees above horizon
       lock throttle to 0. //Engines off.
       when ETA:APOAPSIS < 20 then{
         SET WARP to 0.
@@ -43,11 +47,7 @@ until runmode=0{
       print "Circularization".
        	if ETA:APOAPSIS < 5 or VERTICALSPEED < -1 or eta:apoapsis>100 { //If we're less 5 seconds from Ap or loosing altitude
             	lock throttle to 1.
-		if ETA:APOAPSIS < 5 set targetPitch to eta:apoapsis.
-		ELSE IF ETA:APOAPSIS >5 AND ETA:APOAPSIS < 100 SET targetPitch to eta:apoapsis.
- 		else if eta:apoapsis>100 set targetPitch to 30.
-		else set targetPitch to 5.
-		lock steering to heading ( 90, targetPitch).
+              pitchBal().
 		}
         if ship:periapsis > 0 lock throttle to (ship:mass*g / ship:availablethrust)*0.3.
         if (SHIP:PERIAPSIS > targetPeriapsis*0.9) or (SHIP:apoapsis > targetApoapsis*1.2){
@@ -65,22 +65,22 @@ until runmode=0{
 	      sas on.
         print "SHIP SHOULD NOW BE IN SPACE!".
         ag9.  //payload decoupler
-        run EDLK.
+        //run EDLK. //to be used when EDLK is stable.
+        CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
         }
 
         if stage:liquidfuel<1 and stage:solidfuel<1 and stage:monopropellant<1 AND runmode>1 {//staging function
         		wait 0.1.
         		stage.
         		}
-    if ship:altitude>55000 ag6 on. //fairing deploy, or whatever's on action group 6.
+    if ship:altitude>65000 ag6 on. //fairing deploy, or whatever's on action group 6.
     wait 0.001.
     clearscreen.
 }
 
 function pitchBal {
-		if ETA:APOAPSIS < 5 set targetPitch to max(10, 90*(1-alt:radar/55000)).
-		ELSE IF ETA:APOAPSIS >5 AND ETA:APOAPSIS < 100 SET targetPitch to max(5, 90*(1-alt:radar/40000)).
+		IF ship:verticalspeed > 1 SET targetPitch to 10.
 		else if ship:verticalspeed<-1 set targetPitch to 30.
-		else set targetPitch to 2.
+		else set targetPitch to 5.
 		lock steering to heading ( 90, targetPitch).
 }
