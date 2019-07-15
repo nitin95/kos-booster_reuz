@@ -1,6 +1,6 @@
-//Autopilot 2.2.1 build 220219
+//Autopilot 2.4 build 150719
 //Boostback and landing script for reusable boosters to land at launchpad. Can be used for theoretically infinite boosters.
-//Updates: Code optimization and fixed steering bug.
+//Updates: Code optimization and new soft landing technique.
 
 clearscreen.
 
@@ -28,11 +28,13 @@ else{
 	//
 	wait 0.1.
 	stage.
+	//lock tval to (2* g * SHIP:MASS) / (SHIP:availablethrust+0.01).
 	set tval to 1.
 	gear off.
 	set fullfuel to stage:liquidfuel.
 	wait 2.
 	lock steering to heading(90, steeringPitch).
+	if abort part2().
 	wait until (stage:liquidfuel)/fullfuel < 0.2 OR ship:apoapsis > 89000.
 		print "MECO".
 		set tval to 0.
@@ -49,6 +51,7 @@ else{
 		lock steering to srfprograde.
 		lock throttle to tval.
 		set ship:name to "flyback".
+		wait 5.
 		set kuniverse:activevessel to vessel("flyback").
 		part2().
 }
@@ -79,18 +82,23 @@ function part2 {
 	}
 	when impactTime < 10 then{set kuniverse:timewarp:rate to 0.}	//exiting timewarp to land.
 	when impactTime < 8 then brakes on. //Not necessary with grid fins
-	when impactTime < 5 then lock steering to srfretrograde.
-	when impactTime < 2 then gear on.
+	when impactTime < 7 then lock steering to srfretrograde.
 
 	WAIT UNTIL trueRadar < stopDist.
 		print "Performing hoverslam".
 		LOCK tval to idealThrottle.
 
 	WAIT UNTIL ship:verticalspeed > -5.
+	gear on.
 	lock throttle to (0.95 * ((9.81 * SHIP:MASS) / SHIP:availablethrust)).
 	wait 1.
 	lock steering to up.
-	wait until ship:status = "landed".
+	until ship:verticalspeed > -0.5	and alt:radar<50{
+	  if ship:verticalspeed < -4
+	  set tval to idealThrottle.
+	  else set tval to ((0.95*(g * SHIP:MASS) / SHIP:availablethrust)).
+	}
+	wait until ship:status = "landed" or ship:status = "splashed".
 		print "Hoverslam completed".
 		LOCK throttle to 0.
 		rcs on.

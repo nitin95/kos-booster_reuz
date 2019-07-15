@@ -1,6 +1,6 @@
-//Autopilot 2.2.1 build 220219
+//Autopilot 2.4 build 150719
 //Boostback and landing script for reusable strapon boosters. Can be used for theoretically infinite boosters.
-//Updates: Code optimization and fixed steering bug.
+//Updates: None.
 clearscreen.
 
 wait until ag5.

@@ -1,4 +1,4 @@
-//Autopilot v2.2
+//Autopilot v2.4
 //Autopilot to land a vehicle using a suicide burn.
 
 clearscreen.
@@ -24,7 +24,7 @@ WAIT UNTIL trueRadar < stopDist.
 	lock steering to ship:srfretrograde.
 
 WAIT UNTIL ship:verticalspeed > -5.
-	lock throttle to (1 * ((9.81 * SHIP:MASS) / SHIP:availablethrust)).
+	lock throttle to ((g * SHIP:MASS) / SHIP:availablethrust).
 wait until ship:status = "landed".
 	print "Hoverslam completed".
 	set ship:control:pilotmainthrottle to 0.

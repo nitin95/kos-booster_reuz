@@ -1,13 +1,12 @@
 //Autopilot 2.4 build 150719
-//Simple launch script for expendable vehicles. Meant to replace MechJeb ascent autopilot.
-//Updates: Changed gravity turn function and pitch balance function for better efficiency.
+//Simple launch script for SSTOs.
+//Updates: First file version.
 
 //Set the ship to a known configuration
 SAS off.
 RCS on.
 lights on.
-lock throttle to 0.
-gear off.
+lock twr to ship:availablethrust / (ship:mass*g).
 set tval to 0.
 set g to 9.81.
 lock throttle to TVAL.
@@ -27,39 +26,45 @@ wait until ag5.
 
 until runmode = 0 { //Run until we end the program
 
-if stage:liquidfuel<1 and stage:solidfuel<10 and stage:monopropellant<1 AND runmode>1 {//staging function
-		wait 1.
-		stage.
-		}
 if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Deploy solar panels & fairing, or whatever on action group 6.
 
- if runmode = 1 { //Ship is on the launchpad
+ if runmode = 1 { //Ship is on the runway
 	 			lights off.
-				wait 1.
-				lock steering to UP.  //Point the rocket straight up
-        set TVAL to 1.        //Throttle up to 100%
-        stage.                //Same thing as pressing Space-bar
+        sas on.
+				set tval to 1.
+        stage. //Ignite engines.
+				wait until ship:groundspeed>120. //V1
+        sas off.
+				lock steering to heading(90,15).  //Rotate
+        wait until ship:verticalspeed > 2. //positive climb
+        gear off. //gear up.
+				wait until VANG(HEADING(90,15):VECTOR, SHIP:FACING:VECTOR) < 2.
         set runmode to 2.     //Go to the next runmode
         }
 
-    else if runmode = 2 { // Fly UP.
-        if ship:VERTICALSPEED > 80 {
-            set runmode to 3.
-            }
+    else if runmode = 2 { // Airbreathing Mode.
+				lock steering to heading(ldir,min(15,15*twr*0.5)).
+				wait until twr <0.5 and alt:radar > 15000.
+				ag1 on.
+        lights on.
+				set runmode to 3.
         }
 
     else if runmode = 3 { //Gravity turn
-        lock steering to heading (ldir, targetPitch). //Heading 90' (East), then pitch over gradually until levelling out to 5 degrees at 50km
-				if eta:apoapsis<10 and alt:radar > 50000 pitchBal().
-        if SHIP:APOAPSIS > targetApoapsis {
-            set runmode to 4.
-            }
-					if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on.}     //Deploy solar panels & fairing, or whatever on action group 6.
+        lock steering to heading (ldir, 15).
+        wait until VANG(HEADING(90,15):VECTOR, SHIP:FACING:VECTOR) < 2.
+        wait 2.
+        lock steering to heading (ldir, 20).
+        wait until VANG(HEADING(90,20):VECTOR, SHIP:FACING:VECTOR) < 2.
+        wait 2.
+        lock steering to heading (ldir, 30).
+				if ship:apoapsis > targetApoapsis set runmode to 4.
         }
 
     else if runmode = 4 { //Coast to Ap
       lock steering to ship:srfprograde. //Stay pointing prograde to reduce drag
       set TVAL to 0. //Engines off.
+      set targetApoapsis to ship:apoapsis.
       if (SHIP:ALTITUDE > 70000) and (ETA:APOAPSIS > 60) and (VERTICALSPEED > 0) {
         if WARP = 0 {        // If we are not time warping
           wait 1.         //Wait to make sure the ship is stable
@@ -71,7 +76,6 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
         when eta:apoapsis < 10 then {set TVAL to 0.05.
         set runmode to 5.}
       }
-			if ALT:RADAR>60000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Deploy solar panels & fairing, or whatever on action group 6.
     }
 
     else if runmode = 5 { //Burn to raise Periapsis
@@ -83,11 +87,9 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
 
 				if ship:periapsis > 0 set tval to (ship:mass*g / ship:availablethrust)*0.3.
         if (SHIP:PERIAPSIS > targetPeriapsis) or (SHIP:apoapsis > targetApoapsis*1.1){	//If the periapsis is high enough or apoapsis is too far
-
 						set TVAL to 0.
             set runmode to 10.
             }
-
     }
 
     else if runmode = 10 { //Final touches
@@ -100,13 +102,13 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
 				print "To shut down computer, press 7.".
 				wait 5.
 				set runmode to 0.
-
+        if ag7 CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
     }
 
     lock throttle to TVAL. //Write our planned throttle to the physical throttle
-		wait 0.01.
+    if ALT:RADAR>60000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Deploy solar panels & fairing, or whatever on action group 6.
+		wait 0.001.
 }
-if ag7 CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
 
 function pitchBal {
 		IF ship:verticalspeed > 1 SET targetPitch to 0.
