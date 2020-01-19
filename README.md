@@ -1,6 +1,6 @@
 # kos-booster_reuz
-Autopilot 2.4
-Release: 150719
+Autopilot 2.4.1
+Release: 190120
 
 Set of autopilots cobbled together aiming to fully automate launch and recovery of orbital rocket boosters and SSTOs. Right now, only booster landings are supported.
 
@@ -18,23 +18,12 @@ Feel free to use the code for your own scripts. If you're posting content based 
 
 NOTE:
 
-I will no longer be maintaining this repo from 15/07/2019. This has been a fun journey, but IRL commitments means I'll have to stop gaming entirely for a while. I don't know when I'll be back, but if you feel like tinkering, again, the code is yours to do as you wish. Cheers.
+I'm back to work on the code. More updates to come in the next few months. If you feel like tinkering, again, the code is yours to do as you wish. Cheers.
 
-UPDATE 2.4:
+UPDATE 2.4.1:
 
--drogon.ks now capable of a full Mun mission. Watch your staging though :-).
+-TWR based steering functions to ensure more universal compatibility.
 
--Converted previous drogon.ks to standalone landing script drogonland.ks, which any ship can use for deorbiting any body provided enough fuel is available.
+-Long overdue code cleanups :-D.
 
--New rudimentary SSTO launch autopilot. Press 5 on the runway to get to orbit! Also assign AG1 to switch Rapier modes.
-
--Updated first stage throttle control in all launch scripts. Locked to 1.6 for launcher1 and landbarge and 2.0 for land (higher apoapsis required for RTLS, TWR<2 results in longer boostback burn).
-
--landbarge now calculates MECO based on position of droneship at liftoff, still dialing in the equations.
-
--launcher1 trajectory optimized to reduce drag losses, and modified to work with drogon.ks as well as standalone.
-
-TBD (just some notes for if I return):
--Full droneship and precision LZ landings using PID's and vectors to steer the rocket.
--Interplanetary mission autopilots, with one click from launch to landing.
--Rudimentary booster refurbishment program (This can be simulated using the Kerbal Construction Time and Scrapyard mods, which reduces the time required to assemble the vessel if any components are recovered).
+-Removing landbooster as it's become redundant (just use land or landbarge).

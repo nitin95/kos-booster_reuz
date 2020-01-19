@@ -1,12 +1,15 @@
-//Autopilot 2.4 build 150719
+//Autopilot 2.4.1 build 190120
 //Simple launch script for SSTOs.
-//Updates: First file version.
+//Updates:
+//Cleaning up code;
+//Simplified ascent trajectory to reduce drag losses due to oversteering;
+//More universal steering by accounting for TWR.
 
 //Set the ship to a known configuration
 SAS off.
 RCS on.
 lights on.
-lock twr to ship:availablethrust / (ship:mass*g).
+lock twr to ship:availablethrust / (ship:mass*g)+ 0.001.
 set tval to 0.
 set g to 9.81.
 lock throttle to TVAL.
@@ -31,7 +34,7 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
  if runmode = 1 { //Ship is on the runway
 	 			lights off.
         sas on.
-				set tval to 1.
+        set tval to 1.
         stage. //Ignite engines.
 				wait until ship:groundspeed>120. //V1
         sas off.
@@ -43,7 +46,7 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
         }
 
     else if runmode = 2 { // Airbreathing Mode.
-				lock steering to heading(ldir,min(15,15*twr*0.5)).
+				lock steering to heading(ldir,min(15, arcsin(min(1,1/twr)))).
 				wait until twr <0.5 and alt:radar > 15000.
 				ag1 on.
         lights on.
@@ -51,14 +54,9 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
         }
 
     else if runmode = 3 { //Gravity turn
-        lock steering to heading (ldir, 15).
-        wait until VANG(HEADING(90,15):VECTOR, SHIP:FACING:VECTOR) < 2.
-        wait 2.
-        lock steering to heading (ldir, 20).
-        wait until VANG(HEADING(90,20):VECTOR, SHIP:FACING:VECTOR) < 2.
-        wait 2.
-        lock steering to heading (ldir, 30).
-				if ship:apoapsis > targetApoapsis set runmode to 4.
+        lock steering to heading (ldir, min(20, arcsin(1/(2*twr)))).
+				wait until ship:apoapsis > targetApoapsis.
+        set runmode to 4.
         }
 
     else if runmode = 4 { //Coast to Ap
@@ -112,7 +110,7 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
 
 function pitchBal {
 		IF ship:verticalspeed > 1 SET targetPitch to 0.
-		else if ship:verticalspeed<-1 set targetPitch to 20.
+		else if ship:verticalspeed<-1 set targetPitch to min(20, arcsin(1/(3*twr))).
 		else set targetPitch to 5.
 		lock steering to heading ( ldir, targetPitch).
 }
