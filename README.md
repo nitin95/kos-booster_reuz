@@ -1,6 +1,6 @@
 # kos-booster_reuz
-Autopilot 2.4.1
-Release: 190120
+Autopilot 2.4.2
+Release: 210120
 
 Set of autopilots cobbled together aiming to fully automate launch and recovery of orbital rocket boosters and SSTOs. Right now, only booster landings are supported.
 
@@ -20,10 +20,10 @@ NOTE:
 
 I'm back to work on the code. More updates to come in the next few months. If you feel like tinkering, again, the code is yours to do as you wish. Cheers.
 
-UPDATE 2.4.1:
+UPDATE 2.4.2:
 
--TWR based steering functions to ensure more universal compatibility.
+- Land.ks now does the boostback burn right after staging, improving fuel efficiency.
 
--Long overdue code cleanups :-D.
+- Land.ks ascent trajectory made a bit shallower (pitch 65 from 75) to make use of new boostback technique.
 
--Removing landbooster as it's become redundant (just use land or landbarge).
+- Added a prototype interface to land.ks terminal.
