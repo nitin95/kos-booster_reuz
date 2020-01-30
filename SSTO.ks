@@ -13,6 +13,7 @@ lock twr to ship:availablethrust / (ship:mass*g)+ 0.001.
 set tval to 0.
 set g to 9.81.
 lock throttle to TVAL.
+lock twr to ship:availablethrust / (ship:mass*g)+0.0001.
 clearscreen.
 
 set targetApoapsis to 80000. //Target apoapsis in meters. Set 2850000 for KTO, 80000 for LKO, 60000000 for RTO and 100000000 for escape.
@@ -24,6 +25,8 @@ set runmode to 2. //Safety in case we start mid-flight
 if ALT:RADAR < 100  set runmode to 1.//If we are on the ground, prep for takeoff.
 
 lock targetPitch to max( 5, 90 * (1 - ALT:RADAR / 50000)). //gravity turn pitch function.
+
+HUDTEXT("Press 5 to Fly", 5, 2, 15, green, false).
 
 wait until ag5.
 
@@ -39,6 +42,7 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
 				wait until ship:groundspeed>120. //V1
         sas off.
 				lock steering to heading(90,15).  //Rotate
+        lock tval to 2/twr.
         wait until ship:verticalspeed > 2. //positive climb
         gear off. //gear up.
 				wait until VANG(HEADING(90,15):VECTOR, SHIP:FACING:VECTOR) < 2.
@@ -54,7 +58,7 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
         }
 
     else if runmode = 3 { //Gravity turn
-        lock steering to heading (ldir, min(20, arcsin(1/(2*twr)))).
+        lock steering to heading (ldir, min(20, arcsin(1/(min(4,2*twr))))).
 				wait until ship:apoapsis > targetApoapsis.
         set runmode to 4.
         }
@@ -79,11 +83,11 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
     else if runmode = 5 { //Burn to raise Periapsis
 
        	if ETA:APOAPSIS < 5 or VERTICALSPEED < -1 or eta:apoapsis>100 { //If we're less 5 seconds from Ap or losing altitude
-            	set TVAL to 1.
+            	lock TVAL to 0.8/twr.
 							pitchBal().
 		}
 
-				if ship:periapsis > 0 set tval to (ship:mass*g / ship:availablethrust)*0.3.
+				if ship:periapsis > 0 set tval to 0.1/twr.
         if (SHIP:PERIAPSIS > targetPeriapsis) or (SHIP:apoapsis > targetApoapsis*1.1){	//If the periapsis is high enough or apoapsis is too far
 						set TVAL to 0.
             set runmode to 10.

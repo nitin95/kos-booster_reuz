@@ -20,10 +20,12 @@ NOTE:
 
 I'm back to work on the code. More updates to come in the next few months. If you feel like tinkering, again, the code is yours to do as you wish. Cheers.
 
-UPDATE 2.4.2:
+UPDATE 2.4.21:
 
 - Land.ks now does the boostback burn right after staging, improving fuel efficiency.
 
 - Land.ks ascent trajectory made a bit shallower (pitch 65 from 75) to make use of new boostback technique.
 
 - Added a prototype interface to land.ks terminal.
+
+- Updated trajectory for ssto.ks
