@@ -8,5 +8,5 @@ if alt:radar<100 and ship:groundspeed < 1 and ship:body:name = "Kerbin" run laun
 
 else if ship:body:name = "Kerbin" and ship:periapsis>70000 run muntransfer.ks.
 
-else if ship:body:name = "Mun" and ship:periapsis>7000	run drogonland.ks.
+else if ship:body:name = "Mun" and ship:periapsis>0	run drogonland.ks.
 }

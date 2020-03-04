@@ -1,16 +1,15 @@
-//Autopilot 2.4.1 build 190120
+//Autopilot 2.4.3 build 030320
 //Simple launch script for SSTOs.
 //Updates:
-//Cleaning up code;
-//Simplified ascent trajectory to reduce drag losses due to oversteering;
-//More universal steering by accounting for TWR.
+//Updated ascent trajectory for optimal fuel burn.
 
 //Set the ship to a known configuration
 SAS off.
-RCS on.
+RCS off.
 lights on.
-lock twr to ship:availablethrust / (ship:mass*g)+ 0.001.
+set twr to 0.
 set tval to 0.
+set Steerpitch to 0.
 set g to 9.81.
 lock throttle to TVAL.
 lock twr to ship:availablethrust / (ship:mass*g)+0.0001.
@@ -21,14 +20,14 @@ set targetPeriapsis to 70000. //Target periapsis in meters. Set according to you
 set linc to 0. //target inclination.
 set ldir to 90-linc. //launch direction.
 
-set runmode to 2. //Safety in case we start mid-flight
-if ALT:RADAR < 100  set runmode to 1.//If we are on the ground, prep for takeoff.
+set runmode to 2.
+if ALT:RADAR < 100 and ship:groundspeed < 5 set runmode to 1.//If we are on the ground, prep for takeoff.
 
 lock targetPitch to max( 5, 90 * (1 - ALT:RADAR / 50000)). //gravity turn pitch function.
 
-HUDTEXT("Press 5 to Fly", 5, 2, 15, green, false).
+until ag5 HUDTEXT("Press 5 to Fly", 5, 2, 15, green, false).
 
-wait until ag5.
+
 
 until runmode = 0 { //Run until we end the program
 
@@ -41,7 +40,8 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
         stage. //Ignite engines.
 				wait until ship:groundspeed>120. //V1
         sas off.
-				lock steering to heading(90,15).  //Rotate
+        set Steerpitch to 15.
+				lock steering to heading(ldir,Steerpitch).  //Rotate
         lock tval to 2/twr.
         wait until ship:verticalspeed > 2. //positive climb
         gear off. //gear up.
@@ -50,14 +50,20 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
         }
 
     else if runmode = 2 { // Airbreathing Mode.
-				lock steering to heading(ldir,min(15, arcsin(min(1,1/twr)))).
-				wait until twr <0.5 and alt:radar > 15000.
-				ag1 on.
+        print Steerpitch at (0,0).
+        if ship:groundspeed>320 and ship:groundspeed<500 lock Steerpitch to min(5,arcsin(min(1,1/twr))).
+        else if ship:groundspeed < 320 and alt:radar > 3000 lock Steerpitch to min(5,arcsin(min(1,1/twr))).
+        else lock Steerpitch to min(15, arcsin(min(1,1/twr))).
+        //lock steering to heading(ldir,Steerpitch).
+				if twr <0.5 and alt:radar > 15000
+				{ag1 on.
         lights on.
-				set runmode to 3.
+				set runmode to 3.}
+        clearscreen.
         }
 
     else if runmode = 3 { //Gravity turn
+        rcs on.
         lock steering to heading (ldir, min(20, arcsin(1/(min(4,2*twr))))).
 				wait until ship:apoapsis > targetApoapsis.
         set runmode to 4.
@@ -108,7 +114,7 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
     }
 
     lock throttle to TVAL. //Write our planned throttle to the physical throttle
-    if ALT:RADAR>60000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Deploy solar panels & fairing, or whatever on action group 6.
+    if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Deploy solar panels & fairing, or whatever on action group 6.
 		wait 0.001.
 }
 

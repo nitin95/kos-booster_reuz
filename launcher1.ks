@@ -1,6 +1,6 @@
-//Autopilot 2.4.1 build 190120
+//Autopilot 2.4.3 build 030320
 //Simple launch script for expendable vehicles. Meant to replace MechJeb ascent autopilot.
-//Updates: Dropped runmode 2 and brought back TWR control for launch.
+//Updates: Minor code shuffling
 
 //Set the ship to a known configuration
 SAS off.
@@ -25,22 +25,16 @@ if ALT:RADAR < 100  set runmode to 1.//If we are on the ground, prep for takeoff
 
 lock targetPitch to max( 5, 90 * (1 - ALT:RADAR / 50000)). //gravity turn pitch function.
 
-wait until ag5.
+until ag5 HUDTEXT("Press 5 to Fly", 5, 2, 15, green, false).
+stage. //Burn baby, burn!
 
 until runmode = 0 { //Run until we end the program
-
-if stage:liquidfuel<1 and stage:solidfuel<10 and stage:monopropellant<1 AND runmode>1 {//staging function
-		wait 1.
-		stage.
-		}
-if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Deploy solar panels & fairing, or whatever on action group 6.
 
  if runmode = 1 { //Ship is on the launchpad
 	 			lights off.
 				wait 1.
 				lock steering to heading (ldir, targetPitch). //Heading according to desired inclination, then pitch over gradually until levelling out to 5 degrees at 50km
         lock TVAL to 1.5/twr.        //Throttle up to desired TWR
-        stage.                //Burn baby, burn!
         if ship:VERTICALSPEED > 80 set runmode to 2. //Once in stable flight
         }
 
@@ -67,7 +61,7 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
         when eta:apoapsis < 10 then {set TVAL to 0.05.
         set runmode to 4.}
       }
-			if ALT:RADAR>60000 and runmode>2 {wait 1. ag6 on. wait 1. panels on.}     //Deploy solar panels & fairing, or whatever on action group 6.
+			if ALT:RADAR>60000 and runmode>2 {wait 1. ag6 on. wait 10. panels on.}     //Deploy solar panels & fairing, or whatever on action group 6.
     }
 
     else if runmode = 4 { //Burn to raise Periapsis
@@ -98,6 +92,13 @@ if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Depl
 				set runmode to 0.
 
     }
+
+		if stage:liquidfuel<1 and stage:solidfuel<10 and stage:monopropellant<1 AND runmode>1 {//staging function
+				wait 1.
+				stage.
+				}
+		if ALT:RADAR>70000 and runmode>3 {wait 1. ag6 on. wait 1. panels on.}     //Deploy solar panels & fairing, or whatever on action group 6.
+
 
     lock throttle to TVAL. //Write our planned throttle to the physical throttle
 		wait 0.01.

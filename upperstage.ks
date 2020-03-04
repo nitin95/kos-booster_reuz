@@ -1,9 +1,7 @@
-//Autopilot 2.4.1 build 190120
+//Autopilot 2.4.3 build 030320
 //Upper stage autopilot for partially reusable vehicles. Parks into a ~90x70 km Kerbin orbit (Hopefully).
 //Updates:
-//Better circularization burn control based on stage TWR;
-//Cleaning up code;
-//Better warp to circularization.
+//Minor code changes.
 
 SAS off.
 RCS on.
@@ -28,13 +26,13 @@ set targetPeriapsis to 72000. //Target periapsis in meters.
 until runmode=0{
 
     if runmode = 1 {
-      lock thr to 1.
+      set thr to 1.
       lock steering to heading (90, targetPitch).
       if ship:verticalspeed<-0.1 pitchBal().
       if SHIP:APOAPSIS > targetApoapsis
       {
         lock steering to srfprograde. //Stay pointing prograde for minimal drag.
-        lock thr to 0. //Engines off.
+        set thr to 0. //Engines off.
         set runmode to 2.
       }
     }
@@ -76,10 +74,10 @@ until runmode=0{
         CORE:PART:GETMODULE("kOSProcessor"):DOEVENT("Toggle Power").
         }
 
-        if stage:liquidfuel<1 and stage:solidfuel<1 and stage:monopropellant<1 AND runmode>1 {//staging function
-        		wait 0.1.
-        		stage.
-        		}
+    if stage:liquidfuel<1 and stage:solidfuel<1 and stage:monopropellant<1 AND runmode>1 {//staging function
+    		wait 0.1.
+    		stage.
+    		}
     if ship:altitude>55000 ag6 on. //fairing deploy, or whatever's on action group 6.
     wait 0.01.
     clearscreen.

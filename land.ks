@@ -1,16 +1,16 @@
-//Autopilot 2.4.2 build 210120
+//Autopilot 2.4.3 build
 //Boostback and landing script for reusable boosters to land at launchpad. Can be used for theoretically infinite boosters.
 //Updates:
-//Made terminal a bit more informative.
-//Shallower ascent due to improved boostback burn efficiency.
-//Boostback burn now occurs immediately after staging to reduce fuel usage.
+//Boostback throttling rework to reduce fuel wastage.
+//Added edge case for landing fully stock boosters.
+//Autopilot now shuts down when splashed as well as landed.
 
 clearscreen.
 PRINT "RTLS Autopilot initializing" at (0,0).
-wait until ag5.
+until ag5 HUDTEXT("Press 5 to Fly", 5, 2, 15, green, false).
 loaddist(500000).
 
-print "GNC Booting." at (0,1).
+HUDTEXT("GNC Booting", 5, 2, 15, green, false).
 wait 1.
 
 set horizon to 0.
@@ -19,6 +19,7 @@ set tval to 0.
 SET radarOffset to 30. 				// The value of alt:radar when landed (on gear)
 lock trueRadar to alt:radar-radarOffset.		// Offset radar to get distance from gear to ground
 set g to 9.807.		// Gravity (m/s^2)
+lock twr to ship:availablethrust/ship:mass.
 lock maxDecel to (ship:availablethrust / ship:mass) - g.	// Maximum deceleration possible (m/s^2)
 lock stopDist to ship:verticalspeed^2 / (2 * maxDecel)+30.		// The distance the burn will require
 lock idealThrottle to stopDist / trueRadar.			// Throttle required for perfect hoverslam
@@ -33,9 +34,9 @@ lock hdist to vxcl(up:vector, landing:position):mag.
 lock throttle to tval.
 
 clearscreen.
-print "Variables Loaded." at (0,0).
+HUDTEXT("Variables Loaded", 5, 2, 15, green, false).
 wait 1.
-print "Go for launch." at (0,2).
+HUDTEXT("Go for Launch", 5, 2, 15, green, false).
 wait 1.
 
 if alt:radar>10000 part2().
@@ -80,31 +81,36 @@ function part2 {
 	SET steeringDir TO landing:heading. 	//point towards landing pad
 	SET steeringPitch TO 0.
 	lock steering to heading(steeringDir,steeringPitch).
-	wait until VANG(HEADING(steeringDir,steeringPitch):VECTOR, SHIP:FACING:VECTOR) < 25.  //wait until pointing in right direction, saves fuel.
-		set tval TO 0.05.
-	wait until VANG(HEADING(steeringDir,steeringPitch):VECTOR, SHIP:FACING:VECTOR) < 10.  //wait until pointing in right direction, saves fuel.
-		set tval TO 0.3.
-		flightevent("Boostback").
-		wait until ship:groundspeed < 50.
-		until ship:groundspeed > hdist/lantime.//Basically the groundspeed needed to get back to landing pad.
-		{
-			if eta:apoapsis < 5 or eta:apoapsis > 200 lock lantime to missiontime.
-			print hdist/lantime at (0,5).
-			wait 0.1.
-		}
-		set tval to 0.
+	flightevent("Boostback").
+	set steerdiff to 0.
+	lock steerdiff to VANG(HEADING(steeringDir,steeringPitch):VECTOR, SHIP:FACING:VECTOR).
+	until ship:groundspeed < 50{
+		if steerdiff > 25 HUDTEXT("Press F if booster is stuck.", 5, 2, 15, green, false).
+		if steerdiff < 25 set tval TO min((2* g * SHIP:MASS) / (SHIP:availablethrust+0.01),1/(steerdiff+0.01)). //wait until pointing in right direction, saves fuel.
+		else set tval to 0.
+	}
+	until ship:groundspeed > (hdist/lantime)*1.2//Guesstimate of the groundspeed needed to get back to landing pad.
+	{
+		if eta:apoapsis < 5 or ship:verticalspeed < 0 lock lantime to missiontime.
+		print hdist/lantime at (0,5).
+		wait 0.1.
+	}
+	set tval to 0.
 	flightevent("Preparing for Landing").
-	lock steering to landing:altitudeposition(max(alt:radar-(ship:airspeed*g),5))*-1.
+	lock steering to landing:altitudeposition(max(alt:radar-(ship:airspeed*impactTime),5))*-1.
 	//coast commands
 		set kuniverse:timewarp:mode to "PHYSICS".
 		set kuniverse:timewarp:rate to 4.
 		brakes on.
-	when impactTime < 10 then{set kuniverse:timewarp:rate to 0.}	//exiting timewarp to land.
-	when impactTime < 8 then brakes on. //Not necessary with grid fins
-	when impactTime < 5 then lock steering to srfretrograde.
-	when impactTime < 2 then gear on.
+	UNTIL trueRadar < stopDist{
+		if stockflag = 1 {//for non-grid fin rockets; use airbrakes to control descent speed for optimal aero steering.
+			if ship:airspeed < 500 brakes off.
+			else brakes on.
+		}
+		if impactTime < 10 {set kuniverse:timewarp:rate to 0.}	//exiting timewarp to land.
 
-	WAIT UNTIL trueRadar < stopDist.
+		if impactTime < 5 lock steering to srfretrograde.
+		}
 		clearscreen.
 		flightevent("Performing Hoverslam").
 		LOCK tval to idealThrottle.
@@ -112,7 +118,8 @@ function part2 {
 	WAIT UNTIL ship:verticalspeed > -10.
 	lock steering to up.
 	flightevent("Touching Down").
-	until ship:status = "landed"
+	gear on.
+	until ship:status = "landed" or ship:status = "splashed"
 	{
 		if ship:verticalspeed < -5
 		lock tval to ((1.2*(g * SHIP:MASS) / SHIP:availablethrust)).
@@ -152,5 +159,6 @@ function loaddist {	//Physics range hack from u/Ozin's code
 function flightevent{
 	parameter even.
 	clearscreen.
+	HUDTEXT("Current Event:"+even, 5, 2, 15, green, false).
 	print"Current Event:"+even at (0,1).
 }
