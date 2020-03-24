@@ -1,10 +1,10 @@
 # kos-booster_reuz
-Autopilot 2.4.2
-Release: 210120
+Autopilot 2.5
+Release: 240320
 
 Set of autopilots cobbled together aiming to fully automate launch and recovery of orbital rocket boosters and SSTOs. Right now, only booster landings are supported.
 
-Hoverslam functions are derived from mrbradleyjh's script, boostback algorithms are mine, orbital autopilot is a trimmed down version of Seth Persigehl's launch autopilot and I added a few features and optimized the code.
+Hoverslam functions are derived from mrbradleyjh's script, boostback algorithms are mine, orbital autopilot is a trimmed down version of Seth 'KK4TEE' Persigehl's launch autopilot and I added a few features and optimized the code.
 
 Some basic rules for designing ships to work with the code:
 
@@ -16,16 +16,18 @@ Some basic rules for designing ships to work with the code:
 
 Feel free to use the code for your own scripts. If you're posting content based on this, I'd really appreciate it if you tagged me in the post. (u/nitinm95 on Reddit).
 
-NOTE:
+UPDATE 2.5:
 
-I'm back to work on the code. More updates to come in the next few months. If you feel like tinkering, again, the code is yours to do as you wish. Cheers.
+- Adding new boot file for stock barge landing case.
 
-UPDATE 2.4.21:
+- Removed landbarge as it's now integrated into land.ks as a use case.
 
-- Land.ks now does the boostback burn right after staging, improving fuel efficiency.
+- Cleaned up drogonland.ks and removed slope detection for now.
 
-- Land.ks ascent trajectory made a bit shallower (pitch 65 from 75) to make use of new boostback technique.
+- Added a steering fix to hoverslam.ks which makes sure the booster lands upright and doesn't try to follow the retrograde vector for too long.
 
-- Added a prototype interface to land.ks terminal.
+- Reworked coast steering for land.ks. It's now based on a vector which compensates better for overshoots.
 
-- Updated trajectory for ssto.ks
+- Minor code fix in launcher1.ks which sets thrust to max at takeoff and then regulates it during flight.
+
+- Removed coast warp in upperstage.ks as it's interfering with the land autopilot.

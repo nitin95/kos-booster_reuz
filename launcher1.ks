@@ -34,12 +34,12 @@ until runmode = 0 { //Run until we end the program
 	 			lights off.
 				wait 1.
 				lock steering to heading (ldir, targetPitch). //Heading according to desired inclination, then pitch over gradually until levelling out to 5 degrees at 50km
-        lock TVAL to 1.5/twr.        //Throttle up to desired TWR
+        lock TVAL to 1.        //Throttle up to desired TWR
         if ship:VERTICALSPEED > 80 set runmode to 2. //Once in stable flight
         }
 
     else if runmode = 2 { //Atmospheric Phase
-				lock TVAL to 1. //Full power, Unlimited power!!!
+				lock TVAL to 2/twr.  //Full power, Unlimited power!!!
 				if eta:apoapsis<10 and alt:radar > 50000 pitchBal().
         if SHIP:APOAPSIS > targetApoapsis {
             set runmode to 3.

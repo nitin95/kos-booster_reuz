@@ -25,6 +25,7 @@ WAIT UNTIL trueRadar < stopDist.
 
 WAIT UNTIL ship:verticalspeed > -5.
 	lock throttle to ((g * SHIP:MASS) / SHIP:availablethrust).
+	lock steering to up.
 wait until ship:status = "landed".
 	print "Hoverslam completed".
 	set ship:control:pilotmainthrottle to 0.

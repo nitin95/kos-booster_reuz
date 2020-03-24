@@ -40,11 +40,7 @@ until runmode=0{
     else if runmode = 2 { //Coast to Ap
       set kuniverse:timewarp:mode to "PHYSICS".
   		set kuniverse:timewarp:rate to 4.
-      wait until alt:radar > 70000.
-      SET WARP to 0.
-      set kuniverse:timewarp:mode to "rails".
-  		set WARP to 3.
-      wait until ETA:APOAPSIS < 40.
+      wait until ETA:APOAPSIS < 20.
         SET WARP to 0.
         set runmode to 3.
     }
@@ -83,8 +79,8 @@ until runmode=0{
     clearscreen.
 }
 
-kuniverse:timewarp:warpto(time:seconds+900).
-run edlk.
+
+
 
 function pitchBal {
 		IF ship:verticalspeed > 1 SET targetPitch to 1.
